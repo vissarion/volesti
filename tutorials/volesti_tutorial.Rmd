@@ -4,12 +4,12 @@ author:
 - name: Vissarion Fisikopoulos
 date: "`r format(Sys.time(), '%d %B %Y')`"
 output:
+  pdf_document: default
   html_document:
     df_print: paged
     toc: true
     toc_depth: 2
     keep_md: true
-  pdf_document: default
 params:
   printcode: false  # or set it to true
 ---
@@ -39,7 +39,7 @@ help("volume")
 help("sample_points")
 ```
 
-#Sampling
+# Sampling
 
 Sampling in the square.
 
@@ -76,7 +76,7 @@ for (d in 2:20) {
 }
 ```
 
-##Sampling via random walks
+## Sampling via random walks
 
 `volesti` supports 3 types of random walks 
 
@@ -117,7 +117,7 @@ for (step in c(1,20,100,150)){
 
 ***
 
-#Volume estimation
+# Volume estimation
 
 Now let's compute our first example. The volume of the 3-dimensional cube. 
 
@@ -168,7 +168,7 @@ tim1 <- system.time({ geom_values = convhulln(P$V, options = 'FA') })
 print(volume(P))
 ```
 
-##Volume of Birkhoff polytopes
+## Volume of Birkhoff polytopes
 
 We now continue with a more interesting example, the 10-th Birkhoff polytope. It is known from https://arxiv.org/pdf/math/0305332.pdf that its volume equals 
 
@@ -195,7 +195,7 @@ print(vol_B10/(n^(n-1)))
 
 ***
 
-#Rounding
+# Rounding
 
 We generate skinny polytopes, in particular skinny cubes of the form $\{x=(x_1,\dots,x_d)\ |\ x_1\leq 100, x_1\geq-100,x_i\leq 1,x_i\geq-1,x_i\in \mathbb{R}, \text{ for } i=2,\dots,d\}$. 
 
@@ -268,7 +268,7 @@ cat("volume estimation (3rd step) = ", volesti, " rel. error=", abs(exact-volest
 
 ***
 
-#Integration
+# Integration
 
 We can use sampling and volume estimation to estimate integrals over polyhedral domains. Below there is an example with a degree 2 polynomial over a 3-dimensional cube. 
 
@@ -292,7 +292,7 @@ print(int*V/num_of_points)
 
 # Counting linear extensions
 
-Let $G= (V, E)$ be an acyclic digraph with $V= [n] :=\{1,2, . . . , n\}$. One might want to consider $G$ as a representation of the partially ordered set (poset) $V:i > j$ if and only if there is a directed path from node $i$ to node $j$.A permutation $\pi$ of $[n]$ is called a linear extension of $G$ (or the associated poset $V$) if $\pi^{−1}(i)> \pi^{−1}(j)$ for every edge $i\rightarrow j \in E$.
+Let $G= (V, E)$ be an acyclic digraph with $V= [n] :=\{1,2, . . . , n\}$. One might want to consider $G$ as a representation of the partially ordered set (poset) $V:i > j$ if and only if there is a directed path from node $i$ to node $j$.A permutation $\pi$ of $[n]$ is called a linear extension of $G$ (or the associated poset $V$) if $\pi^{-1}(i)> \pi^{-1}(j)$ for every edge $i\rightarrow j \in E$.
 
 Let $P_{LE}(G)$ be the polytope in $R^n$ defined by $P_{LE}(G) ={x\in R^n|1\geq x_i \geq 0 for all i=1,2,\dots ,n, and $x_i\geq x_j$ for all directed edges $i\rightarrow j \in E$.
 
@@ -311,13 +311,13 @@ P = Hpolytope$new(A, b)
 volume(P,error=0.2)*factorial(5)
 ```
 
-#Questions
+# Questions
 
-##Volume of intersection of polytopes
+## Volume of intersection of polytopes
 
 How can we compute the volume of the intersection of two V-polytopes? What is the complexity? Can you provide any implementations (deterministic or randomized).
 
-#Volume of Minkowski sums
+## Volume of Minkowski sums
 
 The Minkowski sum of two sets (e.g. polytopes) A and B in Euclidean space is formed by adding each vector in A to each vector in B, i.e., the set
 $${\displaystyle A+B=\{a +b \ |\ a \in A,\ b \in B\}.}$$
