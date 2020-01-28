@@ -1,16 +1,11 @@
-import os
-from os.path import split, join
-from glob import glob
-
-from itertools import chain
-
+from os.path import join
 from setuptools import setup
 from Cython.Build import cythonize
 from setuptools.extension import Extension
 import numpy
 
 
-version = "0.1"
+version = "0.2.0"
 license='LGPL3',
 packages = ["volestipy"]
 description="volestipy: wrapper for the VolEsti library to sample from convex sets and compute volume."
