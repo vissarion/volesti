@@ -1,0 +1,504 @@
+---
+title: "Volesti tutorial"
+author: Vissarion Fisikopoulos
+date: "`r format(Sys.time(), '%d %B %Y')`"
+output:
+  html_document:  
+    df_print: paged
+    toc: true
+    toc_depth: 2
+  pdf_document:
+    toc: true
+    toc_depth: 2
+params:
+  printcode: false  # or set it to true
+---
+
+<!--
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When
+you execute code within the notebook, the results appear beneath the
+code.
+
+Try executing this chunk by clicking the *Run* button within the chunk
+or by placing your cursor inside it and pressing *Ctrl+Shift+Enter*.
+-->
+
+***
+
+We start with some `R` warm-up.
+
+```{r R basics}
+# Numerical value
+v <- 23.5
+v
+
+# Create a vector
+apple <- c('red','green',"yellow")
+apple
+
+# Create a matrix
+M <- matrix( c('a','a','b','c','b','a'), nrow = 2, ncol = 3, byrow = TRUE)
+M
+
+# Removing a variable
+rm(M)
+```
+
+Some basic statistics with `R`: normal and uniform distributions.
+
+```{r Normal distribution}
+# Normal distribution
+
+# Let's generate a vectors of random numbers from a normal distribution
+x1 <- rnorm(10000, mean=0, sd=1)
+# The breaks argument specifies how many bars are in the histogram
+hist(x1, probability=TRUE, breaks = 100)
+
+# pnorm returns the integral from −\inf to q of the pdf of the normal
+# distribution where q is a Z-score
+# a z-score is the number of standard deviations from the mean a data point is
+pnorm(0)
+pnorm(2)
+# qnorm function is simply the inverse of the cdf, which you can also 
+# think of as the inverse of pnorm
+qnorm(0.5)
+qnorm(0.98)
+```
+
+```{r Uniform distribution}
+# Uniform distribution
+punif(0.75, min = 0, max = 1)
+qunif(0.75, min = 0, max = 1)
+x2 <- runif(1000, min = 0, max = 1)
+hist(x2, probability=FALSE, breaks = 100)
+```
+
+```{r Descriptive statistics}
+# Descriptive statistics
+mean(x1)
+sd(x1)
+var(x1)
+min(x1)
+max(x1)
+median(x1)
+range(x1)
+quantile(x1)
+summary(x1)
+```
+
+***
+
+# The `volesti` package 
+
+`volesti` is a `C++` package (with an `R` interface) for computing
+estimations of volume of polytopes given by a set of points or linear
+inequalities or Minkowski sum of segments (zonotopes). There are two
+algorithms for volume estimation and algorithms for sampling, rounding
+and rotating polytopes.
+
+We can download the `R` package from https://CRAN.R-project.org/package=volesti
+
+```{r load volesti}
+# first load the volesti library
+#install.packages('volesti')
+library(volesti)
+packageVersion("volesti")
+```
+
+You have access to the documentation of volesti functions like volume
+computation and sampling.
+
+```{r help}
+help("volume")
+help("sample_points")
+```
+
+Full documentation here:
+https://cran.r-project.org/web/packages/volesti/volesti.pdf
+
+Let's try our first volesti command to estimate the volume of a 3-dimensional cube $\{-1\leq x_i\leq 1, x_i\in\mathbb{R}\ |\ i=1,2,3\}$
+
+```{r 1st example}
+P <- gen_cube(3,'H')
+print(volume(P))
+```
+
+What is the exact volume of `P`? Did we obtain a good estimation?
+
+# Sampling
+
+Sampling uniformly in the square.
+
+```{r sampling in square}
+library(ggplot2)
+
+x1<-runif(1000, min = -1, max = 1)
+x2<-runif(1000, min = -1, max = 1)
+
+g<-ggplot(data.frame( x=x1, y=x2 )) + geom_point( aes(x=x, y=y))
+
+g<-g+annotate("path",
+   x=cos(seq(0,2*pi,length.out=100)),
+   y=sin(seq(0,2*pi,length.out=100)),color="red")+coord_fixed()
+
+plot(g)
+```
+
+Can we estimate the volume of the red ball via sampling? 
+Solution: rejection sampling. 
+The following computation illustrates that this will fail in (not so) high dimensions.
+
+```{r rejection sampling}
+# run in around 1 min
+for (d in 2:20) {
+  num_of_points <- 100000
+  count_inside <- 0
+
+  points1 <- matrix(nrow=d, ncol=num_of_points)
+  for (i in 1:d) {
+    x <- runif(num_of_points, min = -1, max = 1)
+    for (j in 1:num_of_points) {
+      points1[i,j] <- x[j]
+    }
+  }
+
+  for (i in 1:num_of_points) {
+    if (norm(points1[,i], type="2") < 1) {
+      count_inside <- count_inside + 1
+    }
+  }
+  vol_estimation <- count_inside*2^d/num_of_points
+  vol_exact <- pi^(d/2)/gamma(d/2+1)
+
+  cat(d, vol_estimation, vol_exact, abs(vol_estimation- vol_exact)/
+vol_exact, "\n")
+}
+```
+
+## Sampling via random walks
+
+`volesti` supports 3 types of random walks
+
+1. Ball walk
+
+\includegraphics[width=.15\textwidth]{figs/ball1.png}\quad
+\includegraphics[width=.15\textwidth]{figs/ball2.png}\quad
+\includegraphics[width=.15\textwidth]{figs/ball3.png}\quad
+\includegraphics[width=.15\textwidth]{figs/ball4.png}\quad
+\includegraphics[width=.15\textwidth]{figs/ball5.png}
+<img src="figs/ball1.png" alt="drawing" width="150"/>
+<img src="figs/ball2.png" alt="drawing" width="150"/>
+<img src="figs/ball3.png" alt="drawing" width="150"/>
+<img src="figs/ball4.png" alt="drawing" width="150"/>
+<img src="figs/ball5.png" alt="drawing" width="150"/>
+
+2. Random directions hit-and-run
+
+\includegraphics[width=.15\textwidth]{figs/hnr1.png}\quad
+\includegraphics[width=.15\textwidth]{figs/hnr2.png}\quad
+\includegraphics[width=.15\textwidth]{figs/hnr3.png}
+<img src="figs/hnr1.png" alt="drawing" width="150"/>
+<img src="figs/hnr2.png" alt="drawing" width="150"/>
+<img src="figs/hnr3.png" alt="drawing" width="150"/>
+
+3. Coordinate directions hit-and-run
+
+\includegraphics[width=.15\textwidth]{figs/cdhr1.png}\quad
+\includegraphics[width=.15\textwidth]{figs/cdhr2.png}\quad
+\includegraphics[width=.15\textwidth]{figs/cdhr3.png}
+<img src="figs/cdhr1.png" alt="drawing" width="150"/>
+<img src="figs/cdhr2.png" alt="drawing" width="150"/>
+<img src="figs/cdhr3.png" alt="drawing" width="150"/>
+
+There are two important parameters `cost per step` and `mixing time`
+that affects the accuracy and performance of the walks. Below we
+illustrate this by choosing different walk steps for each walk while
+sampling on the 100-dimensional cube.
+
+
+```{r random walks comparison, out.width=c('33%', '33%', '33%'), fig.show='hold'}
+#run in few secs
+library(ggplot2)
+library(volesti)
+for (step in c(1,20,100,150)){
+  for (walk in c("CDHR", "RDHR", "BW")){
+    P <- gen_cube(100, 'H')
+    points1 <- sample_points(P, random_walk = walk, walk_length = step, N=1000)
+    g<-plot(ggplot(data.frame( x=points1[1,], y=points1[2,] )) +
+geom_point( aes(x=x, y=y, color=walk)) + coord_fixed(xlim = c(-1,1),
+ylim = c(-1,1)) + ggtitle(sprintf("walk length=%s", step, walk)))
+  }
+}
+```
+
+***
+
+# Volume estimation
+
+Now let's compute our first example. The volume of the 3-dimensional cube.
+
+```{r volume example of the 3-dimensional cube}
+library(geometry)
+
+PV <- gen_cube(3,'V')
+str(PV)
+
+geom_values <- convhulln(PV$V, options = 'FA')
+vol_approx <- volume(PV)
+
+cat(sprintf("exact vol = %f\napprx vol = %f\nrelative error = %f\n",
+            geom_values$vol, vol_approx, abs(geom_values$vol-vol_approx)/geom_values$vol))
+```
+
+Now try a higher dimensional example. By setting the `error` parameter
+we can control the approximation of the algorithm.
+
+```{r volume default precision}
+PH = gen_cube(10,'H')
+volumes <- list()
+for (i in 1:10) {
+  volumes[[i]] <- volume(PH, error=1) # default parameters
+}
+options(digits=10)
+summary(as.numeric(volumes))
+```
+
+```{r volume higher precision}
+volumes <- list()
+for (i in 1:10) {
+  volumes[[i]] <- volume(PH, error=0.5)
+}
+summary(as.numeric(volumes))
+```
+
+Deterministic algorithms for volume are limited to low dimensions
+(e.g. less than $15$)
+
+```{r volesti vs geometry}
+library(geometry)
+
+P = gen_rand_vpoly(15, 20)
+# this will return an error about memory allocation, i.e. the dimension is too high for qhull
+#tim1 <- system.time({ geom_values = convhulln(P$V, options = 'FA') })
+
+#warning: this also takes a lot of time in v1.0.3
+time <- system.time({ vol <- volume(P) })
+print(vol)
+print(time)
+```
+
+## Volume of Birkhoff polytopes
+
+We now continue with a more interesting example, the 10-th Birkhoff
+polytope. It is known from https://arxiv.org/pdf/math/0305332.pdf that
+its volume equals
+
+$\text{vol}(\mathcal{B}_{10}) =
+\frac{727291284016786420977508457990121862548823260052557333386607889}{828160860106766855125676318796872729344622463533089422677980721388055739956270293750883504892820848640000000}$
+
+obtained via massive parallel computation.
+
+```{r Birkhoff polytope}
+library(volesti)
+B10 <- file_to_polytope('data/birk10.ine') #this is actually file to Polytope
+exact <- 727291284016786420977508457990121862548823260052557333386607889/828160860106766855125676318796872729344622463533089422677980721388055739956270293750883504892820848640000000
+
+# the following should be < 1min 
+# by setting the error lower we can get a better approximation but it will take time
+time <- system.time({ vol <- volume(B10, algo = 'CG', error=1) })
+print(vol)
+print(time)
+```
+
+Compare our computed estimation with the "normalized" floating point
+version of  $\text{vol}(\mathcal{B}_{10})$
+
+```{r Birkhoff polytope evaluation}
+n <- 10
+vol_B10 <- 727291284016786420977508457990121862548823260052557333386607889/828160860106766855125676318796872729344622463533089422677980721388055739956270293750883504892820848640000000
+print(vol_B10/(n^(n-1)))
+```
+
+***
+
+# Rounding
+
+We generate skinny polytopes, in particular skinny cubes of the form
+$\{x=(x_1,\dots,x_d)\ |\ x_1\leq 100, x_1\geq-100,x_i\leq
+1,x_i\geq-1,x_i\in \mathbb{R}, \text{ for } i=2,\dots,d\}$.
+
+Our random walks perform poorly on those polytopes especially as the
+dimension increases. Note that if we use the `CDHR` walk here is
+cheating since we take advantage of the instance structure.
+
+```{r Rounding 2d}
+library(ggplot2)
+
+P = gen_skinny_cube(2)
+points1 = sample_points(P, random_walk = "CDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(ylim =
+c(-10,10))
+points1 = sample_points(P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(ylim =
+c(-10,10))
+```
+
+```{r Rounding 10d}
+P = gen_skinny_cube(10)
+points1 = sample_points(P, random_walk = "CDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(xlim =
+c(-100,100), ylim = c(-10,10))
+points1 = sample_points(P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(xlim =
+c(-100,100), ylim = c(-10,10))
+P = gen_skinny_cube(100)
+points1 = sample_points(P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(xlim =
+c(-100,100), ylim = c(-10,10))
+```
+
+
+Then we examine the problem of rounding by sampling in the original
+and then in the rounded polytope and look at the effect in volume
+computation.
+
+```{r Rounding and volume}
+library(ggplot2)
+
+d <- 10
+
+P = gen_skinny_cube(d)
+points1 = sample_points(P, random_walk = "CDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed(ylim =
+c(-10,10))
+
+P <- rand_rotate(P)$P
+
+points1 = sample_points(P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points1[1,]), y = c(points1[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed()
+
+exact <- 2^d*100
+cat("exact volume                 = ", exact , "\n")
+cat("volume estimation (no round) = ", volume(P, random_walk = "RDHR",
+rounding=FALSE), "\n")
+cat("volume estimation (rounding) = ", volume(P, random_walk = "RDHR",
+rounding=TRUE), "\n")
+
+# 1st step of rounding
+res1 = round_polytope(P)
+points2 = sample_points(res1$P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points2[1,]), y = c(points2[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed()
+volesti <- volume(res1$P) * res1$round_value
+cat("volume estimation (1st step) = ", volesti, " rel. error=",
+abs(exact-volesti)/exact,"\n")
+
+# 2nd step of rounding
+res2 = round_polytope(res1$P)
+points2 = sample_points(res2$P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points2[1,]), y = c(points2[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed()
+volesti <- volume(res2$P) * res1$round_value * res2$round_value
+cat("volume estimation (2nd step) = ", volesti, " rel. error=",
+abs(exact-volesti)/exact,"\n")
+
+# 3rd step of rounding
+res3 = round_polytope(res2$P)
+points2 = sample_points(res3$P, random_walk = "RDHR", N=1000)
+ggplot(data.frame(x = c(points2[1,]), y = c(points2[2,])), aes(x=x,
+y=y)) + geom_point() +labs(x =" ", y = " ")+coord_fixed()
+volesti <- volume(res3$P) * res1$round_value * res2$round_value *
+res3$round_value
+cat("volume estimation (3rd step) = ", volesti, " rel. error=",
+abs(exact-volesti)/exact,"\n")
+```
+
+***
+
+# Integration
+
+We can use sampling and volume estimation to estimate integrals over
+polyhedral domains. Below there is an example with a degree 2
+polynomial over a 3-dimensional cube.
+
+```{r Integration}
+library(cubature) # load the package "cubature"
+f <- function(x) { 2/3 * (2 * x[1]^2 + x[2] + x[3]) + 10 }  # "x" is vector
+adaptIntegrate(f, lowerLimit = c(-1, -1, -1), upperLimit = c(1, 1, 1))$integral
+
+# Simple Monte Carlo integration
+# https://en.wikipedia.org/wiki/Monte_Carlo_integration
+P = gen_cube(3, 'H')
+num_of_points <- 10000
+points1 <- sample_points(P, random_walk = "RDHR", walk_length = 100, N=num_of_points)
+int<-0
+for (i in 1:num_of_points){
+  int <- int + f(points1[,i])
+}
+V <- volume(P)
+print(int*V/num_of_points)
+```
+
+# Counting linear extensions
+
+Let $G= (V, E)$ be an acyclic digraph with $V= [n] :=\{1,2, . . . ,
+n\}$. One might want to consider $G$ as a representation of the
+partially ordered set (poset) $V:i > j$ if and only if there is a
+directed path from node $i$ to node $j$.A permutation $\pi$ of $[n]$
+is called a linear extension of $G$ (or the associated poset $V$) if
+$\pi^{-1}(i)> \pi^{-1}(j)$ for every edge $i\rightarrow j \in E$.
+
+Let $P_{LE}(G)$ be the polytope in $R^n$ defined by $P_{LE}(G) =\{x\in
+R^n\ |\ 1\geq x_i \geq 0 \text{ for all }i=1,2,\dots ,n$, and $x_i\geq
+x_j$ for all directed edges $i\rightarrow j \in E$.
+
+A well known result is $\#_{LE}G=vol(P)*n!$.
+
+The following example from
+https://inf.ethz.ch/personal/fukudak/lect/pclect/notes2016/expoly_order.pdf
+has $9$ linear extensions. See also
+https://www.aaai.org/ocs/index.php/AAAI/AAAI18/paper/viewFile/16957/15838
+for counting linear extensions in practice.
+
+![graph](figs/graph.png)
+
+We can approximate this number by the following code.
+
+```{r Linear extensions}
+A = matrix(c(-1,0,1,0,0,0,-1,1,0,0,0,-1,0,1,0,0,0,0,-1,1,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,0,1,-1,0,0,0,0,0,-1,0,0,0,0,0,-1,0,0,0,0,0,-1,0,0,0,0,0,-1),
+ncol=5, nrow=14, byrow=TRUE)
+b = c(0,0,0,0,0,0,0,0,0,1,1,1,1,1)
+P = Hpolytope$new(A, b)
+volume(P,error=0.2)*factorial(5)
+```
+
+# Questions
+
+## Volume of intersection of polytopes
+
+How can we compute the volume of the intersection of two V-polytopes?
+What is the complexity? Can you provide any implementations
+(deterministic or randomized).
+
+## Volume of Minkowski sums
+
+The Minkowski sum of two sets (e.g. polytopes) A and B in Euclidean
+space is formed by adding each vector in A to each vector in B, i.e.,
+the set
+$${\displaystyle A+B=\{a +b \ |\ a \in A,\ b \in B\}.}$$
+
+1. Describe an algorithm for the volume of the Minkowski sum.
+2. What is the complexity of your algorithm?
+3. Implement you algorithm.
+
+## Density estimation / non parametric statistics
+
+Can you estimate the density of a sample generate by `volesti`? Hint:
+`R` package `LogConcDEAD`
