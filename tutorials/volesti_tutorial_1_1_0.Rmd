@@ -221,7 +221,7 @@ sampling on the 100-dimensional cube.
 library(ggplot2)
 library(volesti)
 for (step in c(1,20,100,150)){
-  for (walk in c("CDHR", "RDHR", "BW")){
+  for (walk in c("CDHR", "RDHR", "BW", 'BlW')){
     P <- gen_cube(100, 'H')
     points1 <- sample_points(P, random_walk = walk, walk_length = step, N=1000)
     g<-plot(ggplot(data.frame( x=points1[1,], y=points1[2,] )) +
@@ -266,7 +266,7 @@ summary(as.numeric(volumes))
 ```{r volume higher precision}
 volumes <- list()
 for (i in 1:10) {
-  volumes[[i]] <- volume(PH, error=0.5)
+  volumes[[i]] <- volume(PH, error=0.1)
 }
 summary(as.numeric(volumes))
 ```
@@ -479,26 +479,81 @@ P = Hpolytope$new(A, b)
 volume(P,error=0.2)*factorial(5)
 ```
 
-# Questions
+# Financial modelling
 
-## Volume of intersection of polytopes
+```{r Finance}
+ComputeIndicators <- function(MatReturns, win_len = NULL, numSlices = NULL, n = NULL) {
+  
+  if (is.null(win_len)) win_len = 60
+  if (is.null(numSlices)) numSlices = 100
+  if (is.null(N)) N = 500000
+  
+  nrows = dim(MatReturns)[1]
+  nassets = dim(MatReturns)[2]
+  wl = win_len-1
+  
+  indicators = c()
+  print(nrows-wl)
+  for (i in 1:(nrows-wl)) {
+    
+    W=i:(i+wl)
+    #nR = MatReturns[W,]
+    E = cov(MatReturns[W,])
+    
+    compRet = rep(1,nassets)
+    for (j in 1:nassets) {
+      for (k in W) {
+        compRet[j] = compRet[j] * (1 + MatReturns[k, j])
+      }
+      compRet[j] = compRet[j] - 1
+    }
+    
+    cop = copula2(h = compRet, E = E, numSlices = numSlices, N = N)
+    blue_mass = 0
+    red_mass = 0
+    
+    for (row in 1:100) {
+      for (col in 1:100) {
+        if (row-col<=0.2*numSlices && row-col>=-0.2*numSlices) {
+          if (row+col<0.8*numSlices || row+col>1.2*numSlices) {
+            red_mass = red_mass + cop[row,col]
+          }
+        } else {
+          if (row+col>=0.8*numSlices && row+col<=1.2*numSlices) {
+            blue_mass = blue_mass + cop[row,col]
+          }
+        }
+      }
+    }
+    indicators = c(indicators, blue_mass / red_mass)
+    print(length(indicators))
+  }
+  
+  return(indicators)
+  
+}
 
-How can we compute the volume of the intersection of two V-polytopes?
-What is the complexity? Can you provide any implementations
-(deterministic or randomized).
 
-## Volume of Minkowski sums
 
-The Minkowski sum of two sets (e.g. polytopes) A and B in Euclidean
-space is formed by adding each vector in A to each vector in B, i.e.,
-the set
-$${\displaystyle A+B=\{a +b \ |\ a \in A,\ b \in B\}.}$$
+MatReturns <- read.table("https://stanford.edu/class/ee103/data/returns.txt",
+                           sep=",")
+MatReturns = MatReturns[-c(1,2),]
+dates = as.character(MatReturns$V1)
+MatReturns = as.matrix(MatReturns[,-c(1,54)])
+MatReturns = matrix(as.numeric(MatReturns [,]),nrow = dim(MatReturns )[1],
+                      ncol = dim(MatReturns )[2], byrow = FALSE)
 
-1. Describe an algorithm for the volume of the Minkowski sum.
-2. What is the complexity of your algorithm?
-3. Implement you algorithm.
+row1 = which(dates %in% "2008-12-18")
+row2 = which(dates %in% "2009-03-13")
+nassets = dim(MatReturns)[2]
+compRet = rep(1,nassets)
+for (j in 1:nassets) {
+    for (k in 60) {
+      compRet[j] = compRet[j] * (1 + MatReturns[k, j])
+    }
+    compRet[j] = compRet[j] - 1
+  }
+mass = copula2(h = compRet, E = cov(MatReturns[row1:row2,]))
+plot_ly(z = ~mass) %>% add_surface(showscale=FALSE)
+```
 
-## Density estimation / non parametric statistics
-
-Can you estimate the density of a sample generate by `volesti`? Hint:
-`R` package `LogConcDEAD`

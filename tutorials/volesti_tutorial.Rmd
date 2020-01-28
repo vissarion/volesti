@@ -282,9 +282,9 @@ P = GenRandVpoly(15, 20)
 #tim1 <- system.time({ geom_values = convhulln(P$V, options = 'FA') })
 
 #warning: this also takes a lot of time in v1.0.3
-time <- system.time({ vol <- volume(P) })
-print(vol)
-print(time)
+#time <- system.time({ vol <- volume(P) })
+#print(vol)
+#print(time)
 ```
 
 ## Volume of Birkhoff polytopes
@@ -304,9 +304,9 @@ B10 <- fileToMatrix('data/birk10.ine') #this is actually file to Polytope
 exact <- 727291284016786420977508457990121862548823260052557333386607889/828160860106766855125676318796872729344622463533089422677980721388055739956270293750883504892820848640000000
 
 # warning the following will take around half an hour
-time <- system.time({ vol <- volume(B10, Algo = 'CG') })
-print(vol)
-print(time)
+#time <- system.time({ vol <- volume(B10, Algo = 'CG') })
+#print(vol)
+#print(time)
 ```
 
 Compare our computed estimation with the "normalized" floating point
@@ -468,6 +468,7 @@ for counting linear extensions in practice.
 
 ![graph](figs/graph.png)
 
+
 We can approximate this number by the following code.
 
 ```{r Linear extensions}
@@ -478,26 +479,43 @@ P = Hpolytope$new(A, b)
 volume(P,error=0.2)*factorial(5)
 ```
 
-# Questions
+# Financial modelling
 
-## Volume of intersection of polytopes
+For a specific set of assets in a stock market, portfolios are characterized by their return and
+their risk which is the variance of the portfolios’ returns (volatility).
+Copulas are approximations of the bivariate joint distribution of return and volatility.
 
-How can we compute the volume of the intersection of two V-polytopes?
-What is the complexity? Can you provide any implementations
-(deterministic or randomized).
+```{r Finance}
+#install.packages('plotly')
+library('plotly')
 
-## Volume of Minkowski sums
+MatReturns <- read.table("https://stanford.edu/class/ee103/data/returns.txt", sep=",")
+MatReturns = MatReturns[-c(1,2),]
+dates = as.character(MatReturns$V1)
+MatReturns = as.matrix(MatReturns[,-c(1,54)])
+MatReturns = matrix(as.numeric(MatReturns [,]),nrow = dim(MatReturns )[1], ncol = dim(MatReturns )[2], byrow = FALSE)
 
-The Minkowski sum of two sets (e.g. polytopes) A and B in Euclidean
-space is formed by adding each vector in A to each vector in B, i.e.,
-the set
-$${\displaystyle A+B=\{a +b \ |\ a \in A,\ b \in B\}.}$$
+#starting_date = "2008-12-18" ##crisis period
+#stopping_date = "2009-03-13"
 
-1. Describe an algorithm for the volume of the Minkowski sum.
-2. What is the complexity of your algorithm?
-3. Implement you algorithm.
+starting_date = "2007-03-07" ##normal period
+stopping_date = "2007-05-31"
 
-## Density estimation / non parametric statistics
+row1 = which(dates %in% starting_date)
+row2 = which(dates %in% stopping_date)
 
-Can you estimate the density of a sample generate by `volesti`? Hint:
-`R` package `LogConcDEAD`
+nassets = dim(MatReturns)[2]
+W=row1:row2
+
+compRet = rep(1,nassets)
+for (j in 1:nassets) {
+  for (k in W) {
+    compRet[j] = compRet[j] * (1 + MatReturns[k, j])
+  }
+  compRet[j] = compRet[j] - 1
+}
+
+mass = copula2(h = compRet, E = cov(MatReturns[row1:row2,]), numSlices = 100, N=1000000)
+
+plot_ly(z = ~mass) %>% add_surface(showscale=FALSE)
+```
