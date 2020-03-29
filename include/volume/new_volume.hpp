@@ -157,8 +157,9 @@ private :
         RNGType rng(seed);
         boost::random::uniform_real_distribution<> urdist(0, 1);
 
-        _lamdas.resize(P.num_of_hyperplanes(), NT(0));
-        _Av.resize(P.num_of_hyperplanes(), NT(0));
+        _lamdas.setZero(P.num_of_hyperplanes());
+        _Av.setZero(P.num_of_hyperplanes());
+
         Point v = get_direction<RNGType, Point, NT>(p.dimension());
         std::pair<NT, NT> bpair = P.line_intersect(p, v, _lamdas, _Av);
         _lambda = urdist(rng) * (bpair.first - bpair.second) + bpair.second;
@@ -167,8 +168,8 @@ private :
 
     Point _p;
     NT _lambda;
-    std::vector<NT> _lamdas;
-    std::vector<NT> _Av;
+    typename Point::Coeff _lamdas;
+    typename Point::Coeff _Av;
 };
 
 
@@ -229,7 +230,7 @@ private :
         boost::random::uniform_real_distribution<> urdist(0, 1);
         boost::random::uniform_int_distribution<> uidist(0, p.dimension()-1);
 
-        _lamdas.resize(P.num_of_hyperplanes(), NT(0));
+        _lamdas.setZero(P.num_of_hyperplanes());
         _rand_coord = uidist(rng);
         NT kapa = urdist(rng);
         _p=p;
@@ -242,7 +243,7 @@ private :
     unsigned int _rand_coord;
     Point _p;
     Point _p_prev;
-    std::vector<NT> _lamdas;
+    typename Point::Coeff _lamdas;
 };
 
 
@@ -275,8 +276,8 @@ struct BilliardWalk
         const NT dl = 0.995;
         NT diameter = P.ComputeDiameter();
 
-        _lambdas.resize(P.num_of_hyperplanes(), NT(0));
-        _Av.resize(P.num_of_hyperplanes(), NT(0));
+        _lambdas.setZero(P.num_of_hyperplanes());
+        _Av.setZero(P.num_of_hyperplanes());
 
         _p = p;
 
@@ -321,8 +322,8 @@ private :
     Point _p;
     Point _v;
     NT _lambda_prev;
-    std::vector<NT> _lambdas;
-    std::vector<NT> _Av;
+    typename Point::Coeff _lambdas;
+    typename Point::Coeff _Av;
 };
 
 
@@ -452,7 +453,7 @@ double volume(Polytope &P,
     Point c = InnerBall.first;
     NT radius = InnerBall.second;
 
-    auto round = true;
+    auto round = false;
 
     //1. Rounding of the polytope if round=true
     NT round_value=1;
@@ -477,9 +478,8 @@ double volume(Polytope &P,
     }
 
     // Move the chebychev center to the origin and apply the same shifting to the polytope
-    VT c_e = Eigen::Map<VT>(&c.get_coeffs()[0], c.dimension());
-    P.shift(c_e);
-    c=Point(n);
+    P.shift(c.getCoefficients());
+    c = Point(n);
 
     rnum=rnum/n_threads;
     NT vol=0;
