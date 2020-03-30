@@ -30,6 +30,7 @@
 #include "gaussian_samplers.h"
 #include "gaussian_annealing.h"
 
+#include "khach.h"
 
 struct PushBackWalkPolicy
 {
@@ -92,7 +93,7 @@ struct BallWalk
                PointList &randPoints,
                WalkPolicy &policy)
     {
-        const NT delta = (P.InnerBall()).second;
+        const NT delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
 
         for (auto i=0; i<rnum; ++i)
         {
@@ -330,23 +331,82 @@ private :
 
 ////////////////////////////// Algorithms
 
-#include "khach.h"
-
 
 // ----- ROUNDING ------ //
+/*
+ *     auto round = false;
+
+    //1. Rounding of the polytope if round=true
+    NT round_value=1;
+    if(round){
+#ifdef VOLESTI_DEBUG
+        std::cout<<"\nRounding.."<<std::endl;
+        double tstart1 = (double)clock()/(double)CLOCKS_PER_SEC;
+#endif
+        std::pair<NT,NT> res_round = rounding_min_ellipsoid<NT, RNGType>(P, 1, walk);
+        round_value=res_round.first;
+        std::pair<Point,NT> res=P.ComputeInnerBall();
+        c=res.first;
+        radius=res.second;
+        P.comp_diam(var.diameter, radius);
+        if (var.ball_walk){
+            var.delta = 4.0 * radius / NT(n);
+        }
+
+#ifdef VOLESTI_DEBUG
+        double tstop1 = (double)clock()/(double)CLOCKS_PER_SEC;
+        std::cout << "Rounding time = " << tstop1 - tstart1 << std::endl;
+#endif
+    }
+    */
+/*
+        //apply rounding
+        double tstart1 = (double)clock()/(double)CLOCKS_PER_SEC;
+        //res_round = rounding_min_ellipsoid(P, CheBall, var);
+        std::pair<NT,NT> res_round = rounding_min_ellipsoid<NT, RNGType>(P, 1, walk);
+        round_value = round_value * res_round.first;
+        auto ratio2 = res_round.second;
+        auto ratio1 = 0.0;
+        int count=1;
+        //apply rounding until conditios are satisfied
+        while(ratio2>ratio1 && count<=1) {
+            P.ComputeInnerBall(); //compute the new chebychev center
+            //res_round = rounding_min_ellipsoid(P, CheBall, var);
+            res_round = rounding_min_ellipsoid<NT, RNGType>(P, 1, walk);
+            round_value = round_value * res_round.first;
+            ratio1=ratio2;
+            ratio2 = res_round.second;
+            count++;
+        }
+        double tstop1 = (double)clock()/(double)CLOCKS_PER_SEC;
+        std::cout<<"\nround value is: "<<round_value<<std::endl;
+        std::cout << "Rounding time = " << tstop1 - tstart1 << std::endl;
+        P.ComputeInnerBall(); //compute the new chebychev center
+*/
+
 // main rounding function
-template <typename Polytope, typename Point, typename Parameters, typename NT>
-std::pair<NT, NT> rounding_min_ellipsoid2(Polytope &P,
-                                         const std::pair<Point,NT> &InnerBall,
-                                         const Parameters &var)
-{
-    typedef typename Polytope::MT 	MT;
-    typedef typename Polytope::VT 	VT;
-    typedef typename Parameters::RNGType RNGType;
-    unsigned int n=var.n, walk_len=var.walk_steps, i, j = 0;
+template <typename NT, typename RNGType, typename Polytope, typename WalkType>
+std::pair<NT, NT> rounding_min_ellipsoid(Polytope &P,
+                                          unsigned int walk_length,
+                                          WalkType walk) {
+
+    typedef typename Polytope::PolytopePoint Point;
+    //typedef typename Polytope::FT NT;
+    typedef typename Polytope::MT MT;
+    typedef typename Polytope::VT VT;
+
+    P.ComputeInnerBall();
+    const std::pair<Point,NT> InnerBall = P.InnerBall();
+    auto n = P.dimension();
+    auto i = 0;
+    auto j = 0;
     Point c = InnerBall.first;
     NT radius = InnerBall.second;
     std::list<Point> randPoints; //ds for storing rand points
+
+    //std::cout << radius << ",";
+    //c.print();
+
     if (!P.get_points_for_rounding(randPoints)) {  // If P is a V-polytope then it will store its vertices in randPoints
         // If P is not a V-Polytope or number_of_vertices>20*domension
         // 2. Generate the first random point in P
@@ -355,28 +415,33 @@ std::pair<NT, NT> rounding_min_ellipsoid2(Polytope &P,
         p = p + c;
 
         //use a large walk length e.g. 1000
-        rand_point_generator(P, p, 1, 10*n, randPoints, var);
+        //rand_point_generator(P, p, 1, 10*n, randPoints, var);
+        PushBackWalkPolicy policy;
+        walk.template apply<RNGType>(P, p, 1, 10*n, randPoints, policy);
+
         // 3. Sample points from P
         unsigned int num_of_samples = 10*n;//this is the number of sample points will used to compute min_ellipoid
         randPoints.clear();
-        if (var.bill_walk) {
-            rand_point_generator(P, p, num_of_samples, 5, randPoints, var);
-        } else {
-            rand_point_generator(P, p, num_of_samples, 10 + n / 10, randPoints, var);
-        }
+        walk.template apply<RNGType>(P, p, num_of_samples, 10 + n / 10, randPoints, policy);
+
+        //if (var.bill_walk) {
+        //    rand_point_generator(P, p, num_of_samples, 5, randPoints, var);
+        //} else {
+        //    rand_point_generator(P, p, num_of_samples, 10 + n / 10, randPoints, var);
+        //}
     }
+    //TODO: Update diameter for Billiard and radius for Ball walk
 
     // Store points in a matrix to call Khachiyan algorithm for the minimum volume enclosing ellipsoid
     boost::numeric::ublas::matrix<double> Ap(n,randPoints.size());
     typename std::list<Point>::iterator rpit=randPoints.begin();
-    typename std::vector<NT>::iterator qit;
+
     for ( ; rpit!=randPoints.end(); rpit++, j++) {
-        qit = (*rpit).iter_begin(); i=0;
-        for ( ; qit!=(*rpit).iter_end(); qit++, i++){
-            Ap(i,j)=double(*qit);
+        for (i=0 ; i<rpit->dimension(); i++){
+            Ap(i,j)=double((*rpit)[i]);
         }
     }
-    boost::numeric::ublas::matrix<double> Q(n,n);
+    boost::numeric::ublas::matrix<double> Q(n,n); //TODO: remove dependence on ublas and copy to eigen
     boost::numeric::ublas::vector<double> c2(n);
     size_t w=1000;
     KhachiyanAlgo(Ap,0.01,w,Q,c2); // call Khachiyan algorithm
@@ -415,67 +480,33 @@ std::pair<NT, NT> rounding_min_ellipsoid2(Polytope &P,
 }
 
 
-
-// volume
+// ----- VOLUME ------ //
 
 template
 <
     typename Polytope,
-    typename Parameters,
-    typename WalkType
+    typename WalkType = CDHRWalk<typename Polytope::PolytopePoint>,
+    typename RNGType = boost::mt19937
 >
 double volume(Polytope &P,
-              Parameters & var,  // constans for volume
-              double error,
-              unsigned int walk_length,
-              WalkType walk)// = CDHRWalk<Point>())
+              double error = 1.0,
+              unsigned int walk_length = 1,
+              WalkType walk = WalkType())
 {
     typedef typename Polytope::PolytopePoint Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> Ball;
     typedef BallIntersectPolytope<Polytope,Ball> BallPoly;
-    typedef typename Parameters::RNGType RNGType;
     typedef typename Polytope::VT VT;
 
-    //bool round = var.round;
-    //bool print = var.verbose;
-    //bool rand_only = var.rand_only, deltaset = false;
     unsigned int n = P.dimension();
-    //unsigned int rnum = var.m;
-    unsigned int rnum = std::pow(error,-2) * 400 * n * std::log(n);
-    //unsigned int walk_length = var.walk_steps;
+    unsigned int rnum = std::pow(error, -2) * 400 * n * std::log(n);
     unsigned int n_threads = 1;
-    //const NT err = var.err;
-    //RNGType &rng = var.rng;
 
     //0. Get the Chebychev ball (largest inscribed ball) with center and radius
     auto InnerBall = P.InnerBall();
     Point c = InnerBall.first;
     NT radius = InnerBall.second;
-
-    auto round = false;
-
-    //1. Rounding of the polytope if round=true
-    NT round_value=1;
-    if(round){
-#ifdef VOLESTI_DEBUG
-        std::cout<<"\nRounding.."<<std::endl;
-        double tstart1 = (double)clock()/(double)CLOCKS_PER_SEC;
-#endif
-        std::pair<NT,NT> res_round = rounding_min_ellipsoid(P,InnerBall,var);
-        round_value=res_round.first;
-        std::pair<Point,NT> res=P.ComputeInnerBall();
-        c=res.first;
-        radius=res.second;
-        P.comp_diam(var.diameter, radius);
-        if (var.ball_walk){
-            var.delta = 4.0 * radius / NT(n);
-        }
-#ifdef VOLESTI_DEBUG
-        double tstop1 = (double)clock()/(double)CLOCKS_PER_SEC;
-        std::cout << "Rounding time = " << tstop1 - tstart1 << std::endl;
-#endif
-    }
 
     // Move the chebychev center to the origin and apply the same shifting to the polytope
     P.shift(c.getCoefficients());
@@ -491,7 +522,6 @@ double volume(Polytope &P,
 #ifdef VOLESTI_DEBUG
         std::cout<<"\nGenerate the first random point in P"<<std::endl;
 #endif
-
         Point p = get_point_on_Dsphere<RNGType , Point>(n, radius);
         std::list<Point> randPoints; //ds for storing rand points
 
@@ -626,12 +656,12 @@ double volume(Polytope &P,
             //don't continue in pairs of balls that are almost inside P, i.e. ratio ~= 2
         }
     }
-    vol=round_value*vol;
+    //vol=round_value*vol;
 #ifdef VOLESTI_DEBUG
-    if(print) std::cout<<"rand points = "<<rnum<<std::endl;
-    if(print) std::cout<<"walk len = "<<walk_len<<std::endl;
-    if(print) std::cout<<"round_value: "<<round_value<<std::endl;
-    if(print) std::cout<<"volume computed: "<<vol<<std::endl;
+    std::cout<<"rand points = "<<rnum<<std::endl;
+    std::cout<<"walk len = "<<walk_length<<std::endl;
+    std::cout<<"round_value: "<<round_value<<std::endl;
+    std::cout<<"volume computed: "<<vol<<std::endl;
 #endif
 
     P.free_them_all();
