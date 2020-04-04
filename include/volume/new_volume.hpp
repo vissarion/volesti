@@ -157,24 +157,27 @@ struct GetPointInDsphere
 /////////////////// Random Walks
 
 // ball walk with uniform target distribution
+struct BallWalk
+{
+
 template
 <
     typename Polytope,
     typename RandomNumberGenerator
 >
-struct BallWalk
+struct Walk
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    BallWalk(Polytope P, RandomNumberGenerator)
+    Walk(Polytope P, RandomNumberGenerator)
     {
         P.ComputeInnerBall();
     }
 
-    BallWalk(BallPolytope, RandomNumberGenerator)
+    Walk(BallPolytope, RandomNumberGenerator)
     {}
 
     template
@@ -199,26 +202,31 @@ struct BallWalk
     }
 };
 
+};
+
 // random directions hit-and-run walk with uniform target distribution
+struct RDHRWalk
+{
+
 template
 <
     typename Polytope,
     typename RandomNumberGenerator
 >
-struct RDHRWalk
+struct Walk
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    RDHRWalk(Polytope P, RandomNumberGenerator &rng)
+    Walk(Polytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
     }
 
-    RDHRWalk(BallPolytope P, RandomNumberGenerator &rng)
+    Walk(BallPolytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
@@ -265,27 +273,31 @@ private :
     typename Point::Coeff _Av;
 };
 
+};
 
 // random directions hit-and-run walk with uniform target distribution
+struct CDHRWalk
+{
+
 template
 <
     typename Polytope,
     typename RandomNumberGenerator
 >
-struct CDHRWalk
+struct Walk
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    CDHRWalk(Polytope P, RandomNumberGenerator &rng)
+    Walk(Polytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
     }
 
-    CDHRWalk(BallPolytope P, RandomNumberGenerator &rng)
+    Walk(BallPolytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
@@ -338,27 +350,31 @@ private :
     typename Point::Coeff _lamdas;
 };
 
+};
 
 // billiard walk for uniform distribution
+struct BilliardWalk
+{
+
 template
 <
     typename Polytope,
     typename RandomNumberGenerator
 >
-struct BilliardWalk
+struct Walk
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    BilliardWalk(Polytope P, RandomNumberGenerator &rng)
+    Walk(Polytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
     }
 
-    BilliardWalk(BallPolytope P, RandomNumberGenerator &rng)
+    Walk(BallPolytope P, RandomNumberGenerator &rng)
     {
         Point center = P.InnerBall().first;
         initialize(P, center, rng);
@@ -444,6 +460,7 @@ private :
     typename Point::Coeff _Av;
 };
 
+};
 
 ///
 /// Random generators' policies
@@ -531,20 +548,24 @@ struct RandomPointGenerator
 
 template
 <
-    typename WalkType,// = BallWalk<Polytope,RNGType>
-    typename RandomNumberGenerator,// = BoostRandomNumberGenerator<boost::mt19937, double>
+    typename WalkTypePolicy = CDHRWalk,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
     typename Polytope
 >
 double volume(Polytope &P,
               double error = 1.0,
-              unsigned int walk_length = 1,
-              unsigned seed = 1)
+              unsigned int walk_length = 1)
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
     typedef Ball<Point> Ball;
     typedef BallIntersectPolytope<Polytope,Ball> BallPoly;
 
+    typedef typename WalkTypePolicy::template Walk
+                                              <
+                                                Polytope,
+                                                RandomNumberGenerator
+                                              > WalkType;
     typedef RandomPointGenerator<WalkType> RandomPointGenerator;
 
     unsigned int n = P.dimension();
