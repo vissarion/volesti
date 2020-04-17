@@ -13,6 +13,7 @@
 
 #include <limits>
 #include <iostream>
+#include "Eigen/Eigen"
 #include "solve_lp.h"
 
 //min and max values for the Hit and Run functions
@@ -22,7 +23,7 @@
 template <typename Point>
 class HPolytope{
 public:
-    typedef Point PolytopePoint;
+    typedef Point PointType;
     typedef typename Point::FT NT;
     typedef typename std::vector<NT>::iterator viterator;
     //using RowMatrixXd = Eigen::Matrix<NT, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
@@ -34,40 +35,37 @@ private:
     MT A; //matrix A
     VT b; // vector b, s.t.: Ax<=b
     unsigned int            _d; //dimension
+    std::pair<Point,NT> _inner_ball;
     //NT maxNT = 1.79769e+308;
     //NT minNT = -1.79769e+308;
     NT maxNT = std::numeric_limits<NT>::max();
     NT minNT = std::numeric_limits<NT>::lowest();
 
 public:
-    HPolytope() {}
 
-    // constructor: cube(d)
-    HPolytope(unsigned int d): _d(d) {
-        A.resize(2 * d, d);
-        b.resize(2 * d);
-        for (unsigned int i = 0; i < d; ++i) {
-            b(i) = 1;
-            for (unsigned int j = 0; j < d; ++j) {
-                if (i == j) {
-                    A(i, j) = 1;
-                } else {
-                    A(i, j) = 0;
-                }
-            }
-        }
-        for (unsigned int i = 0; i < d; ++i) {
-            b(i + d) = 1;
-            for (unsigned int j = 0; j < d; ++j) {
-                if (i == j) {
-                    A(i + d, j) = -1;
-                } else {
-                    A(i + d, j) = 0;
-                }
-            }
-        }
+    HPolytope()
+    {
+        typedef typename Point::FT NT;
+        _inner_ball = ComputeChebychevBall<NT, Point>(A, b);
     }
 
+    std::pair<Point,NT> InnerBall() const
+    {
+        return _inner_ball;
+    }
+
+    //Compute Chebyshev ball of H-polytope P:= Ax<=b
+    //Use LpSolve library
+    std::pair<Point,NT> ComputeInnerBall()
+    {
+        _inner_ball = ComputeChebychevBall<NT, Point>(A, b);
+        return _inner_ball;
+    }
+
+    NT ComputeDiameter() const
+    {
+        return NT(4) * std::sqrt(NT(_d)) * _inner_ball.second;
+    }
 
     // return dimension
     unsigned int dimension() const {
@@ -143,18 +141,12 @@ public:
 
     // print polytope in input format
     void print() {
-#ifdef VOLESTI_DEBUG
         std::cout << " " << A.rows() << " " << _d << " float" << std::endl;
-#endif
         for (unsigned int i = 0; i < A.rows(); i++) {
             for (unsigned int j = 0; j < _d; j++) {
-                #ifdef VOLESTI_DEBUG
                 std::cout << A(i, j) << " ";
-                #endif
             }
-            #ifdef VOLESTI_DEBUG
             std::cout << "<= " << b(i) << std::endl;
-            #endif
         }
     }
 
@@ -225,7 +217,8 @@ public:
 
 
     //Check if Point p is in H-polytope P:= Ax<=b
-    int is_in(const Point &p) const {
+    int is_in(const Point &p) const
+    {
         NT sum;
         int m = A.rows();
         const NT* b_data = b.data();
@@ -241,18 +234,10 @@ public:
     }
 
 
-    //Compute Chebyshev ball of H-polytope P:= Ax<=b
-    //Use LpSolve library
-    std::pair<Point,NT> ComputeInnerBall() {
-
-        //lpSolve lib for the linear program
-        return ComputeChebychevBall<NT, Point>(A, b);
-    }
-
-
     // compute intersection point of ray starting from r and pointing to v
     // with polytope discribed by A and b
-    std::pair<NT,NT> line_intersect(Point &r, Point &v) {
+    std::pair<NT,NT> line_intersect(Point &r, Point &v) const
+    {
 
         NT lamda = 0, min_plus = NT(maxNT), max_minus = NT(minNT);
         VT sum_nom, sum_denom;
@@ -288,13 +273,11 @@ public:
     // compute intersection points of a ray starting from r and pointing to v
     // with polytope discribed by A and b
     std::pair<NT,NT> line_intersect(Point &r, Point &v, VT& Ar,
-            VT& Av, bool pos = false) {
+                  VT& Av, bool pos = false) const {
+
 
         NT lamda = 0, min_plus = NT(maxNT), max_minus = NT(minNT);
         VT sum_nom;
-        NT mult;
-        //unsigned int i, j;
-        unsigned int j;
         int m = num_of_hyperplanes(), facet;
 
         Ar.noalias() = A * r.getCoefficients();
@@ -325,10 +308,10 @@ public:
     }
 
     std::pair<NT,NT> line_intersect(Point &r, Point &v, VT& Ar,
-            VT& Av, const NT &lambda_prev, bool pos = false) {
-
+                   VT& Av, const NT &lambda_prev, bool pos = false) const
+    {
         NT lamda = 0, min_plus = NT(maxNT), max_minus = NT(minNT);
-        VT  sum_nom;
+        VT sum_nom;
         NT mult;
         //unsigned int i, j;
         unsigned int j;
@@ -362,27 +345,34 @@ public:
 
     // compute intersection point of a ray starting from r and pointing to v
     // with polytope discribed by A and b
-    std::pair<NT, int> line_positive_intersect(Point &r, Point &v, VT& Ar,
-            VT& Av) {
+    std::pair<NT, int> line_positive_intersect(Point &r,
+                                               Point &v,
+                                               VT& Ar,
+                                               VT& Av) const {
         return line_intersect(r, v, Ar, Av, true);
     }
 
 
     // compute intersection point of a ray starting from r and pointing to v
     // with polytope discribed by A and b
-    std::pair<NT, int> line_positive_intersect(Point &r, Point &v, VT& Ar,
-            VT& Av, const NT &lambda_prev) {
+    std::pair<NT, int> line_positive_intersect(Point &r,
+                                               Point &v,
+                                               VT& Ar,
+                                               VT& Av,
+                                               const NT &lambda_prev) const
+    {
         return line_intersect(r, v, Ar, Av, lambda_prev, true);
     }
 
 
     //First coordinate ray intersecting convex polytope
-    std::pair<NT,NT> line_intersect_coord(Point &r, const unsigned int &rand_coord,
-                                          VT& lamdas) {
+    std::pair<NT,NT> line_intersect_coord(Point &r,
+                                          const unsigned int &rand_coord,
+                                          VT& lamdas) const
+    {
 
         NT lamda = 0, min_plus = NT(maxNT), max_minus = NT(minNT);
         VT sum_denom;
-        unsigned int j;
         int m = num_of_hyperplanes();
 
         sum_denom = A.col(rand_coord);
@@ -414,8 +404,8 @@ public:
                                           const Point &r_prev,
                                           const unsigned int rand_coord,
                                           const unsigned int rand_coord_prev,
-                                          VT& lamdas) {
-        ;
+                                          VT& lamdas) const
+    {
         NT lamda = 0, min_plus = NT(maxNT), max_minus = NT(minNT);
 
         int m = num_of_hyperplanes();
@@ -448,13 +438,15 @@ public:
 
 
     // shift polytope by a point c
-    void shift(const VT &c){
+    void shift(const VT &c)
+    {
         b -= A*c;
     }
 
 
     // return for each facet the distance from the origin
-    std::vector<NT> get_dists(const NT &radius){
+    std::vector<NT> get_dists(const NT &radius) const
+    {
         unsigned int i=0;
         std::vector <NT> dists(num_of_hyperplanes(), NT(0));
         typename std::vector<NT>::iterator disit = dists.begin();
@@ -486,7 +478,8 @@ public:
 
     }
 
-    void compute_reflection(Point &v, const Point &p, const int facet) {
+    void compute_reflection(Point &v, const Point &, const int facet) const
+    {
         v += -2 * v.dot(A.row(facet)) * A.row(facet);
     }
 

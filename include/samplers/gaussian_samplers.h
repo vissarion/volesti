@@ -60,7 +60,12 @@ NT get_max_coord(const NT &l, const NT &u, const NT &a_i) {
 
 // Pick a point from the distribution exp(-a_i||x||^2) on the chord
 template <typename Parameters, typename Point, typename NT>
-void rand_exp_range(Point &lower, Point & upper, const NT &a_i, Point &p, Parameters const& var) {
+void rand_exp_range(Point &lower,
+                    Point & upper,
+                    const NT &a_i,
+                    Point &p,
+                    Parameters const& var)
+{
     typedef typename Parameters::RNGType RNGType;
     NT r, r_val, fn;
     const NT tol = 0.00000001;
@@ -235,13 +240,15 @@ void rand_gaussian_point_generator(Polytope &P,
     if (var.cdhr_walk) {
         rand_coord = uidist(rng2);
         std::pair <NT, NT> bpair = P.line_intersect_coord(p, rand_coord, lamdas);
-        NT dis = rand_exp_range_coord(p[rand_coord] + bpair.second, p[rand_coord] + bpair.first, a_i, var);
+        NT dis = rand_exp_range_coord(p[rand_coord] + bpair.second,
+                                      p[rand_coord] + bpair.first, a_i, var);
         p_prev = p;
         coord_prev = rand_coord;
         p.set_coord(rand_coord, dis);
         for (unsigned int j = 0; j < walk_len - 1; ++j) {
             rand_coord = uidist(rng2);
-            gaussian_hit_and_run_coord_update(p, p_prev, P, rand_coord, coord_prev, a_i, lamdas, var);
+            gaussian_hit_and_run_coord_update(p, p_prev, P, rand_coord,
+                                              coord_prev, a_i, lamdas, var);
             coord_prev = rand_coord;
         }
         randPoints.push_back(p);
@@ -255,7 +262,8 @@ void rand_gaussian_point_generator(Polytope &P,
             } else if (var.cdhr_walk) {
                 rand_coord_prev = rand_coord;
                 rand_coord = uidist(rng2);
-                gaussian_hit_and_run_coord_update(p, p_prev, P, rand_coord, rand_coord_prev, a_i, lamdas, var);
+                gaussian_hit_and_run_coord_update(p, p_prev, P, rand_coord,
+                                                  rand_coord_prev, a_i, lamdas, var);
             } else
                 gaussian_hit_and_run(p, P, a_i, var);
         }
