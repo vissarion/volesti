@@ -65,15 +65,14 @@ public:
 
     NT ComputeDiameter() const
     {
-        diameter = NT(4) * std::sqrt(NT(_d)) * _inner_ball.second;
-        return diameter;
+        return NT(4) * std::sqrt(NT(_d)) * _inner_ball.second;
     }
 
     void set_diameter(const NT &diam) {
         diameter = diam;
     }
 
-    NT get_diameter() {
+    NT get_diameter() const {
         return diameter;
     }
 
@@ -121,11 +120,11 @@ public:
         return 0.0;
     }
 
-    void comp_diam(NT &diam) {
+    void comp_diam(NT &diam) const {
         diam = 4.0 * std::sqrt(NT(_d)) * ComputeInnerBall().second;
     }
 
-    void comp_diam(NT &diam, const NT &cheb_rad) {
+    void comp_diam(NT &diam, const NT &cheb_rad) const {
         diam = 4.0 * std::sqrt(NT(_d)) * cheb_rad;
     }
 

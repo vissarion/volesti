@@ -51,15 +51,16 @@ public:
 
     NT ComputeDiameter() const
     {
-        comp_diam(diameter);
-        return diameter;
+        NT diam;
+        comp_diam(diam);
+        return diam;
     }
 
     void set_diameter(const NT &diam) {
         diameter = diam;
     }
 
-    NT get_diameter() {
+    NT get_diameter() const {
         return diameter;
     }
 
@@ -199,7 +200,7 @@ public:
         }
     }
 
-    void comp_diam(NT &diam, const NT &cheb_rad) {
+    void comp_diam(NT &diam, const NT &cheb_rad) const {
         comp_diam(diam);
     }
 

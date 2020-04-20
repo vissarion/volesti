@@ -7,11 +7,6 @@
 #ifndef NEW_COOLING_HPOLY_H
 #define NEW_COOLING_HPOLY_H
 
-#include "ball_annealing.h"
-#include "hpoly_annealing.h"
-#include "ratio_estimation.h"
-#include "zonoIntersecthpoly.h"
-
 
 template <
         typename BoundaryRandomPointGenerator,
@@ -23,8 +18,10 @@ template <
         >
 void comp_diam_hpoly_zono_inter(ZonoHP &ZHP, const MT &G, const MT &AG, const VT &b, RNG& rng) {
 
-    typedef typename Hpolytope::PolytopePoint Point;
+    typedef typename Hpolytope::PointType Point;
     typedef typename ZonoHP::NT NT;
+
+    PushBackWalkPolicy push_back_policy;
 
     int k = G.cols(), d= ZHP.dimension();
 
@@ -44,7 +41,7 @@ void comp_diam_hpoly_zono_inter(ZonoHP &ZHP, const MT &G, const MT &AG, const VT
 
     std::list<Point> randPoints;
     std::pair<Point, NT> InnerBall = HP.ComputeInnerBall();
-    BoundaryRandomPointGenerator::apply(ZHP, InnerBall.first, 4*d*d, 1,
+    BoundaryRandomPointGenerator::apply(HP, InnerBall.first, 4*d*d, 1,
                                 randPoints, push_back_policy, rng);
     //boundary_rand_point_generator(HP, InnerBall.first, 2*d*d, 1, randPoints, var);
 
@@ -67,15 +64,18 @@ template
                 typename RNG,
                 typename VT
         >
-bool get_first_poly(Zonotope &P, HPolytope &HP, cooling_ball_parameters<NT> const& parameters, RNG& rng, VT &b_max){//} VT &Zs_max_gl, const NT &lb, const NT &up_lim, NT &ratio,
+bool get_first_poly(Zonotope &P, HPolytope &HP, NT &ratio, cooling_ball_parameters<NT> const& parameters, RNG& rng, VT &b_max){//} VT &Zs_max_gl, const NT &lb, const NT &up_lim, NT &ratio,
 
 
-    typedef typename Zonotope::PolytopePoint Point;
+    typedef typename Zonotope::PointType Point;
     typedef typename Zonotope::MT MT;
-    typedef typename Zonotope::VT VT;
+    //typedef typename Zonotope::VT VT;
+
+    PushBackWalkPolicy push_back_policy;
 
     MT G = P.get_mat().transpose(), A = HP.get_mat();
-    b_max = (A*G).cwiseAbs().rowwise().sum(), b_min = HP.get_vec();
+    b_max = (A*G).cwiseAbs().rowwise().sum();
+    VT b_min = HP.get_vec();
     HPolytope HPiter=HP;
 
     int n = P.dimension(), m = b_max.size(), N = 1200, iter = 1, count = 0;
@@ -125,13 +125,13 @@ bool get_first_poly(Zonotope &P, HPolytope &HP, cooling_ball_parameters<NT> cons
     return false;
 }
 
-HPolySet, HP2, HP2.get_vec(), Zs_min, randPoints, ratios, parameters
+
 template <typename Zonotope, typename HPolytope, typename VT, typename PointList, typename NT>
 bool get_next_zonoball(std::vector<HPolytope> &HPolySet,
                        HPolytope &HP2, const VT &b_max, const VT &b_min, PointList &randPoints,
                        std::vector<NT> &ratios, cooling_ball_parameters<NT> const& parameters){
 
-    typedef typename Zonotope::PolytopePoint Point;
+    typedef typename Zonotope::PointType Point;
 
     int n = HP2.dimension(), iter = 1;
     bool too_few;
@@ -175,12 +175,14 @@ template <
         typename NT,
         typename RNG>
 bool get_sequence_of_zonopolys(Zonotope &Z, const HPolytope &HP, std::vector<HPolytope> &HPolySet,
-                               const VT &b_max, unsigned int const& N_times_nu, unsigned int const& walk_length,
+                               std::vector<NT> &ratios, const VT &b_max, unsigned int const& N_times_nu, unsigned int const& walk_length,
                                cooling_ball_parameters<NT> const& parameters, RNG& rng, RNG& rng_diam) {
 
-    bool print = var.verbose, too_few=false;
-    typedef typename Zonotope::PolytopePoint Point;
+    bool too_few=false;
+    typedef typename Zonotope::PointType Point;
     typedef typename Zonotope::MT MT;
+
+    PushBackWalkPolicy push_back_policy;
 
     int n = Z.dimension();
     MT G = Z.get_mat().transpose();
@@ -200,7 +202,7 @@ bool get_sequence_of_zonopolys(Zonotope &Z, const HPolytope &HP, std::vector<HPo
         ratios.push_back(ratio);
         return true;
     }
-    if ( !get_next_zonoball(HPolySet, HP2, b_max, HP.get_vec(), randPoints, ratios, parameters)){//} p_value, up_lim, nu, alpha) ) {
+    if ( !get_next_zonoball<Zonotope>(HPolySet, HP2, b_max, HP.get_vec(), randPoints, ratios, parameters)){//} p_value, up_lim, nu, alpha) ) {
         return false;
     }
 
@@ -224,7 +226,7 @@ bool get_sequence_of_zonopolys(Zonotope &Z, const HPolytope &HP, std::vector<HPo
             ratios.push_back(ratio);
             return true;
         }
-        if ( !get_next_zonoball(HPolySet, HP2, HP2.get_vec(), Zs_min, randPoints, ratios, parameters) ){
+        if ( !get_next_zonoball<Zonotope>(HPolySet, HP2, HP2.get_vec(), Zs_min, randPoints, ratios, parameters) ){
             return false;
         }
     }
@@ -238,10 +240,12 @@ template
         >
 void compute_hpoly_for_mmc(Zonotope &P, HPolytope &HP) {
 
+    typedef typename Zonotope::PointType Point;
+    typedef typename Zonotope::NT NT;
     typedef typename Zonotope::VT VT;
     typedef typename Zonotope::MT MT;
 
-    MT V = ZP.get_mat();
+    MT V = P.get_mat();
     MT G = V.transpose();
     int m = G.cols();
     std::list<Point> randPoints;
@@ -249,7 +253,7 @@ void compute_hpoly_for_mmc(Zonotope &P, HPolytope &HP) {
     MT XX(m, 2*m);
     XX << MT::Identity(m,m), -MT::Identity(m,m);
     MT AA = XX.transpose(); VT b = VT::Ones(2*m);
-    MT T = ZP.get_T();
+    MT T = P.get_T();
     MT Tt = T.transpose();
     MT A2 = AA * Tt, B = G * Tt;
     MT A3 = A2 * B.inverse();
@@ -260,10 +264,8 @@ void compute_hpoly_for_mmc(Zonotope &P, HPolytope &HP) {
         A3.row(i) = A3.row(i) / row_norm;
         b(i) = b(i) / row_norm;
     }
-    MT A = A3*G;
 
-    //Hpolytope HP;
-    HP.init(n,A3,b);
+    HP.init(P.dimension(),A3,b);
 }
 
 
@@ -271,41 +273,41 @@ template
         <
                 typename WalkTypePolicy = BilliardWalk,
                 typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
-                typename Zonotope,
-                typename HPolytope
+                typename HPolytope,
+                typename Zonotope
+
         >
-NT volume_cooling_hpoly (Zonotope const& Pin,
+double volume_cooling_hpoly (Zonotope const& Pin,
                          double const& error = 1.0,
                          unsigned int const& walk_length = 1)
 {
 
-    ttypedef typename Zonotope::PointType Point;
+    typedef typename Zonotope::PointType Point;
     typedef typename Point::FT NT;
-    typedef ZonotopentersectHPolytope <Zonotope, HPolytope> ZonoHP;
+    typedef ZonoIntersectHPoly <Zonotope, HPolytope> ZonoHP;
     typedef typename Zonotope::VT VT;
     typedef std::list <Point> PointList;
 
     typedef typename WalkTypePolicy::template Walk
             <
-                    Polytope,
+                    Zonotope,
                     RandomNumberGenerator
             > WalkType;
-    typedef RandomPointGenerator<WalkType> RandomPointGenerator;
+    typedef RandomPointGenerator<WalkType> ZonoRandomPointGenerator;
 
     typedef typename CDHRWalk::template Walk
             <
-                    Polytope,
+                    HPolytope,
                     RandomNumberGenerator
             > CdhrWalk;
     typedef RandomPointGenerator<CdhrWalk> CdhrRandomPointGenerator;
 
     typedef typename BCDHRWalk::template Walk
             <
-                    Polytope,
+                    HPolytope,
                     RandomNumberGenerator
             > BCdhrWalk;
-    typedef BoundryRandomPointGenerator<BCdhrWalk> BCdhrRandomPointGenerator;
-
+    typedef BoundaryRandomPointGenerator<BCdhrWalk> BCdhrRandomPointGenerator;
 
     auto P(Pin);
     RandomNumberGenerator rng(P.dimension());
@@ -313,100 +315,86 @@ NT volume_cooling_hpoly (Zonotope const& Pin,
     cooling_ball_parameters<NT> parameters;
 
     int n = P.dimension();
-    NT prob = parameters.p;
+    NT prob = parameters.p, ratio;
     int N_times_nu = parameters.N * parameters.nu;
 
-
-    auto InnerBall = P.ComputeInnerBall();
-    NT radius = InnerBall.second;
-    Point c = InnerBall.first;
-    NT diameter = P.ComputeDiameter();
-
-    Hpolytope HP;
-    compute_hpoly_for_mmc(Zonotope &P, HPolytope &HP);
+    HPolytope HP;
+    compute_hpoly_for_mmc(P, HP);
     VT b_max(2*P.num_of_generators());
-    if ( !get_first_poly<CdhrRandomPointGenerator>(P, HP, parameters, rng, b_max) ) {
+    if ( !get_first_poly<CdhrRandomPointGenerator>(P, HP, ratio, parameters, rng, b_max) ) {
         return -1.0;
     }
-    //Hpolytope HP2 = HP;
-    //HP.normalize();
 
-    //std::pair<Point, NT> InnerBall = HP.ComputeInnerBall();
-
-    std::vector<Hpolytope > HPolySet;
+    std::vector<HPolytope > HPolySet;
     std::vector<NT> ratios;
 
     ZonoHP zb1, zb2;
     std::vector<NT> diams_inter;
 
-    if ( !get_sequence_of_zonopolys<RandomPointGenerator, BCdhrRandomPointGenerator, ZonoHP>(ZP, HP, HPolySet, ratios,
+    if ( !get_sequence_of_zonopolys<ZonoRandomPointGenerator, BCdhrRandomPointGenerator, ZonoHP>(P, HP, HPolySet, ratios,
                         b_max, N_times_nu, walk_length, parameters, rng, rng_diam) ){
         return -1.0;
     }
-    //var.diameter = diam0;
 
     int mm=HPolySet.size()+2;
     int mm2=mm+1;
     prob = std::pow(prob, 1.0/NT(mm2));
-    NT er0 = e/(2.0*std::sqrt(NT(mm2))), er1 = (e*std::sqrt(2.0*NT(mm2)-1))/(std::sqrt(2.0*NT(mm2))),
-            Her = e/(2.0*std::sqrt(NT(mm2)));
+    NT er0 = error/(2.0*std::sqrt(NT(mm2))), er1 = (error*std::sqrt(2.0*NT(mm2)-1))/(std::sqrt(2.0*NT(mm2))),
+            Her = error/(2.0*std::sqrt(NT(mm2)));
 
-    vol = volume_gaussian_annealing<GaussianCDHRWalk, RNG>(HP, Her, 1);
-    //vol = volume_gaussian_annealing(HP, var_g, var, InnerBall);
+    NT vol = volume_gaussian_annealing<GaussianCDHRWalk, RandomNumberGenerator>(HP, Her, 1);
 
     if (!parameters.window2) {
-        vol *= esti_ratio_interval<CdhrWalk, Point>(HP, ZP, ratio, er0, parameters.win_len, 1200, prob, 10+10*n, rng);
+        vol *= estimate_ratio_interval<CdhrWalk, Point>(HP, P, ratio, er0, parameters.win_len, 1200, prob, 10+10*n, rng);
     } else {
-        vol *= esti_ratio<CdhrWalk, Point>(HP, ZP, ratio, er0, parameters.win_len, 1200, 10 + 10*n, rng);
+        vol *= estimate_ratio<CdhrWalk, Point>(HP, P, ratio, er0, parameters.win_len, 1200, 10 + 10*n, rng);
     }
 
-    Hpolytope b1, b2;
+    HPolytope b1, b2;
     if (HPolySet.size()==0) {
         if (ratios[0]!=1) {
-            if(!window2) {
-                vol = vol / esti_ratio_interval<WalkType, Point>(ZP, HP, ratios[0], er1, parameters.win_len, N_times_nu,
+            if(!parameters.window2) {
+                vol = vol / estimate_ratio_interval<WalkType, Point>(P, HP, ratios[0], er1, parameters.win_len, N_times_nu,
                                                                prob, walk_length, rng);
             } else {
-                vol = vol / esti_ratio<WalkType, Point>(ZP, HP, ratios[0], er1, parameters.win_len, N_times_nu,
+                vol = vol / estimate_ratio<WalkType, Point>(P, HP, ratios[0], er1, parameters.win_len, N_times_nu,
                                                                walk_length, rng);
             }
         }
     } else {
         er1 = er1 / std::sqrt(NT(mm)-1.0);
         b1 = HPolySet[0];
-        if(!window2) {
-            vol = vol / esti_ratio_interval<WalkType, Point>(ZP, b1, ratios[0], er1, parameters.win_len, N_times_nu,
+        if(!parameters.window2) {
+            vol = vol / estimate_ratio_interval<WalkType, Point>(P, b1, ratios[0], er1, parameters.win_len, N_times_nu,
                                                                prob, walk_length, rng);
         } else {
-            vol = vol / esti_ratio<WalkType, Point>(ZP, b1, ratios[0], er1, parameters.win_len, N_times_nu,
+            vol = vol / estimate_ratio<WalkType, Point>(P, b1, ratios[0], er1, parameters.win_len, N_times_nu,
                                                                walk_length, rng);
         }
 
         for (int i = 0; i < HPolySet.size()-1; ++i) {
-            zb1 = ZonoHP(ZP,HPolySet[i]);
+            zb1 = ZonoHP(P,HPolySet[i]);
             b2 = HPolySet[i+1];
-            var.diameter = diams_inter[i];
-            if(!window2) {
-                vol = vol / esti_ratio_interval<WalkType, Point>(zb1, b2, ratios[i], er1, parameters.win_len,
+            if(!parameters.window2) {
+                vol = vol / estimate_ratio_interval<WalkType, Point>(zb1, b2, ratios[i], er1, parameters.win_len,
                                                                N_times_nu, prob, walk_length, rng);
             } else {
-                vol = vol / esti_ratio<WalkType, Point>(zb1, b2, ratios[i], er1, parameters.win_len, N_times_nu,
+                vol = vol / estimate_ratio<WalkType, Point>(zb1, b2, ratios[i], er1, parameters.win_len, N_times_nu,
                                                                walk_length, rng);
             }
         }
 
-        zb1 = ZonoHP(ZP,HPolySet[HPolySet.size()-1]);
-        var.diameter = diams_inter[diams_inter.size()-1];
-        if (!window2) {
-            vol = vol / esti_ratio_interval<WalkType, Point>(zb1, HP, ratios[ratios.size() - 1], er1,
+        zb1 = ZonoHP(P,HPolySet[HPolySet.size()-1]);
+        if (!parameters.window2) {
+            vol = vol / estimate_ratio_interval<WalkType, Point>(zb1, HP, ratios[ratios.size() - 1], er1,
                                                                parameters.win_len, N_times_nu, prob, walk_length, rng);
         } else {
-            vol = vol / esti_ratio<WalkType, Point>(zb1, HP, ratios[ratios.size() - 1], er1, parameters.win_len,
+            vol = vol / estimate_ratio<WalkType, Point>(zb1, HP, ratios[ratios.size() - 1], er1, parameters.win_len,
                                                                N_times_nu, walk_length, rng);
         }
     }
 
-    ZP.free_them_all();
+    P.free_them_all();
 
     return vol;
 

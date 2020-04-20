@@ -42,15 +42,14 @@ public:
 
     NT ComputeDiameter() const
     {
-        comp_diam(diameter);
-        return diameter;
+        return 2.0 * B.radius();
     }
 
     void set_diameter(const NT &diam) {
         diameter = diam;
     }
 
-    NT get_diameter() {
+    NT get_diameter() const {
         return diameter;
     }
 
@@ -69,7 +68,7 @@ public:
         return P.dimension();
     }
 
-    void comp_diam(NT &diam) {
+    void comp_diam(NT &diam) const {
         diam = 2.0 * B.radius();
     }
 
