@@ -31,6 +31,8 @@ private:
     MT V;  //matrix V. Each row contains a vertex
     VT b;  // vector b that contains first column of ine file
     unsigned int _d;  //dimension
+    std::pair<Point,NT> _inner_ball;
+    NT diameter;
     NT maxNT = std::numeric_limits<NT>::max();
     NT minNT = std::numeric_limits<NT>::lowest();
     REAL *conv_comb, *row, *row_mem;
@@ -227,7 +229,8 @@ public:
         }
 
         radius = radius / std::sqrt(NT(_d));
-        return std::pair<Point, NT> (center, radius);
+        _inner_ball = std::pair<Point, NT> (center, radius);
+        return _inner_ball;
     }
 
     void comp_diam(NT &diam) {
@@ -257,6 +260,20 @@ public:
 
     void comp_diam(NT &diam, const NT &cheb_rad) {
         comp_diam(diam);
+    }
+
+    NT ComputeDiameter() {
+
+        comp_diam(diameter);
+        return diameter;
+    }
+
+    void set_diameter(const NT &diam) {
+        diameter = diam;
+    }
+
+    NT get_diameter() {
+        return diameter;
     }
 
     // compute intersection point of ray starting from r and pointing to v

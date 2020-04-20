@@ -19,6 +19,7 @@ public:
     typedef typename HPolytope::VT VT;
     typedef typename HPolytope::MT MT;
     typedef typename Zonotope::PolytopePoint Point;
+    NT diameter;
 
     ZonoIntersectHPoly() {}
 
@@ -55,6 +56,19 @@ public:
 
     MT get_vec() const {
         return HP.get_vec();
+    }
+
+    NT ComputeDiameter() const
+    {
+        return diameter;
+    }
+
+    void set_diameter(const NT &diam) {
+        diameter = diam;
+    }
+
+    NT get_diameter() {
+        return diameter;
     }
 
     std::pair<NT,NT> line_intersect(Point &r, Point &v) {

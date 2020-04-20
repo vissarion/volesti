@@ -34,6 +34,7 @@ private:
     VT b;  // vector b that contains first column of ine file
     unsigned int _d;  //dimension
     std::pair<Point,NT> _inner_ball;
+    NT diameter;
     REAL *conv_comb, *row, *conv_comb2, *conv_mem;
     int *colno, *colno_mem;
 
@@ -50,8 +51,15 @@ public:
 
     NT ComputeDiameter() const
     {
-        NT diameter;
         comp_diam(diameter);
+        return diameter;
+    }
+
+    void set_diameter(const NT &diam) {
+        diameter = diam;
+    }
+
+    NT get_diameter() {
         return diameter;
     }
 

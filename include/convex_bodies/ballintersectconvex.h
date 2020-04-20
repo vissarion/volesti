@@ -21,6 +21,7 @@ public:
     typedef typename CBall::NT NT;
     typedef typename CBall::PointType PointType;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
+    NT diameter;
 
     BallIntersectPolytope() {}
 
@@ -34,9 +35,23 @@ public:
         return P.InnerBall();
     }
 
+    //NT ComputeDiameter() const
+   // {
+     //   return NT(2) * B.radius();
+    //}
+
     NT ComputeDiameter() const
     {
-        return NT(2) * B.radius();
+        comp_diam(diameter);
+        return diameter;
+    }
+
+    void set_diameter(const NT &diam) {
+        diameter = diam;
+    }
+
+    NT get_diameter() {
+        return diameter;
     }
 
     int is_in(PointType &p) const

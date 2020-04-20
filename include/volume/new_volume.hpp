@@ -391,7 +391,7 @@ struct Walk
                       RandomNumberGenerator &rng)
     {
         unsigned int n = P.dimension();
-        NT diameter = P.ComputeDiameter();
+        NT diameter = P.get_diameter();
         NT T = rng.sample_urdist() * diameter;
         const NT dl = 0.995;
 
@@ -483,6 +483,251 @@ private :
 
 };
 
+// random directions hit-and-run walk with uniform target distribution
+struct BCDHRWalk
+{
+
+    template
+            <
+                    typename Polytope,
+                    typename RandomNumberGenerator
+            >
+    struct Walk
+    {
+        typedef typename Polytope::PointType Point;
+        typedef typename Point::FT NT;
+        typedef Ball<Point> BallType;
+        typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
+
+        Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+
+        Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+
+        Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+
+        template
+                <
+                        typename BallPolytope
+                >
+        inline void apply(BallPolytope const& P,
+                          Point &p1,   // a point to start
+                          Point &p2,
+                          unsigned int const& walk_length,
+                          RandomNumberGenerator &rng)
+        {
+            for (auto j=0u; j<walk_length; ++j)
+            {
+                auto rand_coord_prev = _rand_coord;
+                _rand_coord = rng.sample_uidist();
+                NT kapa = rng.sample_urdist();
+                std::pair<NT, NT> bpair = P.line_intersect_coord(_p,
+                                                                 _p_prev,
+                                                                 _rand_coord,
+                                                                 rand_coord_prev,
+                                                                 _lamdas);
+                _p_prev = _p;
+                _p.set_coord(_rand_coord, _p[_rand_coord] + bpair.first + kapa
+                                                                          * (bpair.second - bpair.first));
+            }
+            p1 = _p_prev;
+            p2 = _p_prev;
+            p1.set_ccord(_rand_coord, bpair.first);
+            p2.set_ccord(_rand_coord, bpair.second);
+            //p = _p;
+        }
+
+    private :
+
+        template <typename BallPolytope>
+        inline void initialize(BallPolytope const& P,
+                               Point &p,
+                               RandomNumberGenerator &rng)
+        {
+            _lamdas.setZero(P.num_of_hyperplanes());
+            _rand_coord = rng.sample_uidist();
+            NT kapa = rng.sample_urdist();
+            _p = p;
+            std::pair<NT, NT> bpair = P.line_intersect_coord(_p, _rand_coord, _lamdas);
+            _p_prev = _p;
+            _p.set_coord(_rand_coord, _p[_rand_coord] + bpair.first + kapa
+                                                                      * (bpair.second - bpair.first));
+        }
+
+        unsigned int _rand_coord;
+        Point _p;
+        Point _p_prev;
+        typename Point::Coeff _lamdas;
+    };
+
+};
+
+
+// random directions hit-and-run walk with uniform target distribution
+struct BCDHRWalk
+{
+
+    template
+            <
+                    typename Polytope,
+                    typename RandomNumberGenerator
+            >
+    struct Walk
+    {
+        typedef typename Polytope::PointType Point;
+        typedef typename Point::FT NT;
+        typedef Ball<Point> BallType;
+        typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
+
+        Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+
+        Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+
+        Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+
+        template
+                <
+                        typename BallPolytope
+                >
+        inline void apply(BallPolytope const& P,
+                          Point &p1,   // a point to start
+                          Point &p2,
+                          unsigned int const& walk_length,
+                          RandomNumberGenerator &rng)
+        {
+            for (auto j=0u; j<walk_length; ++j)
+            {
+                auto rand_coord_prev = _rand_coord;
+                _rand_coord = rng.sample_uidist();
+                NT kapa = rng.sample_urdist();
+                std::pair<NT, NT> bpair = P.line_intersect_coord(_p,
+                                                                 _p_prev,
+                                                                 _rand_coord,
+                                                                 rand_coord_prev,
+                                                                 _lamdas);
+                _p_prev = _p;
+                _p.set_coord(_rand_coord, _p[_rand_coord] + bpair.first + kapa
+                                                                          * (bpair.second - bpair.first));
+            }
+            p1 = _p_prev;
+            p2 = _p_prev;
+            p1.set_ccord(_rand_coord, bpair.first);
+            p2.set_ccord(_rand_coord, bpair.second);
+            //p = _p;
+        }
+
+    private :
+
+        template <typename BallPolytope>
+        inline void initialize(BallPolytope const& P,
+                               Point &p,
+                               RandomNumberGenerator &rng)
+        {
+            _lamdas.setZero(P.num_of_hyperplanes());
+            _rand_coord = rng.sample_uidist();
+            NT kapa = rng.sample_urdist();
+            _p = p;
+            std::pair<NT, NT> bpair = P.line_intersect_coord(_p, _rand_coord, _lamdas);
+            _p_prev = _p;
+            _p.set_coord(_rand_coord, _p[_rand_coord] + bpair.first + kapa
+                                                                      * (bpair.second - bpair.first));
+        }
+
+        unsigned int _rand_coord;
+        Point _p;
+        Point _p_prev;
+        typename Point::Coeff _lamdas;
+    };
+
+};
+
+
+// random directions hit-and-run walk with uniform target distribution
+struct BRDHRWalk
+{
+
+    template
+            <
+                    typename Polytope,
+                    typename RandomNumberGenerator
+            >
+    struct Walk
+    {
+        typedef typename Polytope::PointType Point;
+        typedef typename Point::FT NT;
+        typedef Ball<Point> BallType;
+        typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
+
+        Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+
+        Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng)
+        {
+            initialize(P, p, rng);
+        }
+        Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+
+        template
+                <
+                        typename BallPolytope
+                >
+        inline void apply(BallPolytope const& P,
+                          Point &p1,   // a point to start
+                          Point $p2,
+                          unsigned int const& walk_length,
+                          RandomNumberGenerator &rng)
+        {
+            for (auto j=0u; j<walk_length; ++j)
+            {
+                Point v = GetDirection<Point>::apply(p.dimension(), rng);
+                std::pair<NT, NT> bpair = P.line_intersect(_p, v, _lamdas, _Av,
+                                                           _lambda);
+                _lambda = rng.sample_urdist() * (bpair.first - bpair.second)
+                          + bpair.second;
+                p1 = _p + bpair.first * v;
+                p2 = _p + bpair.second * v;
+                _p += (_lambda * v);
+            }
+            //p = _p;
+        }
+
+    private :
+
+        template <typename BallPolytope>
+        inline void initialize(BallPolytope const& P,
+                               Point &p,
+                               RandomNumberGenerator &rng)
+        {
+            _lamdas.setZero(P.num_of_hyperplanes());
+            _Av.setZero(P.num_of_hyperplanes());
+
+            Point v = GetDirection<Point>::apply(p.dimension(), rng);
+            std::pair<NT, NT> bpair = P.line_intersect(p, v, _lamdas, _Av);
+            _lambda = rng.sample_urdist() * (bpair.first - bpair.second) + bpair.second;
+            _p = (_lambda * v) + p;
+        }
+
+        Point _p;
+        NT _lambda;
+        typename Point::Coeff _lamdas;
+        typename Point::Coeff _Av;
+    };
+
+};
+
 ///
 ///////////////////// Random generators' policies
 
@@ -556,6 +801,40 @@ struct RandomPointGenerator
         {
             walk.template apply(P, p, walk_length, rng);
             policy.apply(randPoints, p);
+        }
+    }
+};
+
+
+template
+        <
+                typename Walk
+        >
+struct BoundaryRandomPointGenerator
+{
+    template
+            <
+                    typename Polytope,
+                    typename Point,
+                    typename PointList,
+                    typename WalkPolicy,
+                    typename RandomNumberGenerator
+            >
+    static void apply(Polytope const& P,
+                      Point &p,   // a point to start
+                      unsigned int const& rnum,
+                      unsigned int const& walk_length,
+                      PointList &randPoints,
+                      WalkPolicy &policy,
+                      RandomNumberGenerator &rng)
+    {
+        Walk walk(P, p, rng);
+        Point p1(P.dimension()), p2(P.dimension());
+        for (unsigned int i=0; i<rnum/2; ++i)
+        {
+            walk.template apply(P, p1, p2, walk_length, rng);
+            policy.apply(randPoints, p1);
+            policy.apply(randPoints, p2);
         }
     }
 };

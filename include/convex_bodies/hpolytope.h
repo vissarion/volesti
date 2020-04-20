@@ -36,6 +36,7 @@ private:
     VT b; // vector b, s.t.: Ax<=b
     unsigned int            _d; //dimension
     std::pair<Point,NT> _inner_ball;
+    NT diameter;
     //NT maxNT = 1.79769e+308;
     //NT minNT = -1.79769e+308;
     NT maxNT = std::numeric_limits<NT>::max();
@@ -64,7 +65,16 @@ public:
 
     NT ComputeDiameter() const
     {
-        return NT(4) * std::sqrt(NT(_d)) * _inner_ball.second;
+        diameter = NT(4) * std::sqrt(NT(_d)) * _inner_ball.second;
+        return diameter;
+    }
+
+    void set_diameter(const NT &diam) {
+        diameter = diam;
+    }
+
+    NT get_diameter() {
+        return diameter;
     }
 
     // return dimension
