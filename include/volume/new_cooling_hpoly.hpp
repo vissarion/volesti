@@ -342,7 +342,10 @@ double volume_cooling_hpoly (Zonotope const& Pin,
     NT er0 = error/(2.0*std::sqrt(NT(mm2))), er1 = (error*std::sqrt(2.0*NT(mm2)-1))/(std::sqrt(2.0*NT(mm2))),
             Her = error/(2.0*std::sqrt(NT(mm2)));
 
-    NT vol = volume_gaussian_annealing<GaussianCDHRWalk, RandomNumberGenerator>(HP, Her, 1);
+    //NT vol = volume_gaussian_annealing<GaussianCDHRWalk, RandomNumberGenerator>(HP2, Her/2.0, 1);
+    HPolytope HP2 = HP;
+    //TODO: rounding to HP2
+    NT vol = volume_cooling_balls<BilliardWalk, RandomNumberGenerator>(HP, Her, 1);
 
     if (!parameters.window2) {
         vol *= estimate_ratio_interval<CdhrWalk, Point>(HP, P, ratio, er0, parameters.win_len, 1200, prob, 10+10*n, rng);

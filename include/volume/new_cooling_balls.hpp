@@ -35,7 +35,7 @@ struct cooling_ball_parameters
         ,   p(0.75)
         ,   rmax(0)
         ,   alpha(0.2)
-        ,   win_len(500)
+        ,   win_len(1000)
         ,   N(150)
         ,   nu(10)
         ,   window2(false)

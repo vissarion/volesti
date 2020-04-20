@@ -52,32 +52,38 @@ void test_volume(Polytope &P,
 
     // Estimate the volume
     std::cout << "Number type: " << typeid(NT).name() << std::endl;
-    typedef BoostRandomNumberGenerator<boost::mt19937, NT, 3> RNGType;
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT, 5> RNGType;
 
     //TODO: low accuracy in high dimensions
     //NT volume = volume_cooling_balls<BallWalk, RNGType>(HP, e, walk_len);
     //test_values(volume, expectedBall, exact);
+    std::cout << "\nrandom walk: CDHR, body: H-polytope" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_hpoly<CDHRWalk, RNGType, Hpolytope>(P, e, walk_len);
     test_values(volume, expectedCDHR, exact);
 
+    std::cout << "\nrandom walk: RDHR, body: H-polytope" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_hpoly<RDHRWalk, RNGType, Hpolytope>(P, e, walk_len);
     test_values(volume, expectedRDHR, exact);
 
+    std::cout << "\nrandom walk: BiW, body: H-polytope" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_hpoly<BilliardWalk, RNGType, Hpolytope>(P, e, walk_len);
     test_values(volume, expectedBilliard, exact);
 
     //cooling balls//
+    std::cout << "\nrandom walk: CDHR, body: ball" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_balls<CDHRWalk, RNGType>(P, e, walk_len);
     test_values(volume, expectedCDHR, exact);
 
+    std::cout << "\nrandom walk: RDHR, body: ball" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_balls<RDHRWalk, RNGType>(P, e, walk_len);
     test_values(volume, expectedRDHR, exact);
 
+    std::cout << "\nrandom walk: BiW, body: ball" << std::endl;
     P.init(P.dimension(), P.get_mat(), P.get_vec());
     volume = volume_cooling_balls<BilliardWalk, RNGType>(P, e, walk_len);
     test_values(volume, expectedBilliard, exact);
@@ -91,14 +97,15 @@ void call_test_uniform_generator(){
     typedef Zonotope<Point> zonotope;
     zonotope P;
 
-    std::cout << "--- Testing volume of H-cube10" << std::endl;
+    std::cout << "--- Testing volume of zonotope uniform d-k: 5-10" << std::endl;
     P = gen_zonotope_uniform<zonotope, RNGType>(5, 10, 127);
     NT exact_vol = exact_zonotope_vol<NT>(P);
     test_volume(P, exact_vol, exact_vol, exact_vol, exact_vol, exact_vol);
 
-    //std::cout << "--- Testing volume of H-cube20" << std::endl;
-    //P = gen_cube<Hpolytope>(20, false);
-    //test_volume(P, 1051340, 1017430, 1083870, 1094580, 1048576);
+    std::cout << "\n--- Testing volume of zonotope uniform d-k: 10-15" << std::endl;
+    P = gen_zonotope_uniform<zonotope, RNGType>(10, 15, 211);
+    exact_vol = exact_zonotope_vol<NT>(P);
+    test_volume(P, exact_vol, exact_vol, exact_vol, exact_vol, exact_vol);
 }
 
 
