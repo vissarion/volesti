@@ -497,7 +497,6 @@ NT ComputeDiameter(Polytope &P) {
     {
         PushBackWalkPolicy push_back_policy;
 
-
         typedef typename BCDHRWalk::template Walk
                 <
                         Hpolytope,

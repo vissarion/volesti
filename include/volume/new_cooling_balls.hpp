@@ -388,9 +388,9 @@ NT estimate_ratio(PolyBall1& Pb1,
                   int const& Ntot,
                   unsigned int const& walk_length,
                   RNG& rng,
-                  bool isball = false,
                   NT radius = 0.0)
 {
+    typedef Ball<Point> BallType;
     const unsigned max_iterations_estimation = 10000000;
     int n = Pb1.dimension();
     int min_index = W-1;
@@ -410,7 +410,7 @@ NT estimate_ratio(PolyBall1& Pb1,
 
     while (iter++ <= max_iterations_estimation)
     {
-        if (isball)
+        if (eqTypes<PolyBall1, BallType>())
         {
             p = GetPointInDsphere<Point>::apply(n, radius, rng);
         } else {
@@ -474,9 +474,9 @@ NT estimate_ratio_interval(PolyBall1& Pb1,
                            NT const& prob,
                            unsigned int const& walk_length,
                            RNG& rng,
-                           bool isball = false,
                            NT const& radius = 0)
 {
+    typedef Ball<Point> BallType;
     const unsigned max_iterations_estimation = 10000000;
     int n = Pb1.dimension();
     int index = 0;
@@ -492,7 +492,7 @@ NT estimate_ratio_interval(PolyBall1& Pb1,
 
     for (int i = 0; i < W; ++i)
     {
-        if (isball)
+        if (eqTypes<PolyBall1, BallType>())
         {
             p = GetPointInDsphere<Point>::apply(n, radius, rng);
         } else
@@ -517,7 +517,7 @@ NT estimate_ratio_interval(PolyBall1& Pb1,
 
     while (iter++ <= max_iterations_estimation)
     {
-        if (isball) {
+        if (eqTypes<PolyBall1, BallType>()) {
             p = GetPointInDsphere<Point>::apply(n, radius, rng);
         } else
         {
@@ -571,7 +571,6 @@ double volume_cooling_balls(Polytope const& Pin,
                                               > WalkType;
     typedef RandomPointGenerator<WalkType> RandomPointGenerator;
 
-
     auto P(Pin);
     RandomNumberGenerator rng(P.dimension());
     cooling_ball_parameters<NT> parameters;
@@ -584,7 +583,6 @@ double volume_cooling_balls(Polytope const& Pin,
     auto InnerBall = P.ComputeInnerBall();
     NT radius = InnerBall.second;
     Point c = InnerBall.first;
-    //NT diameter = P.ComputeDiameter();
 
     std::vector<BallType> BallSet;
     std::vector<NT> ratios;
@@ -593,9 +591,6 @@ double volume_cooling_balls(Polytope const& Pin,
     // and apply the same shifting to the polytope
     P.normalize();
     P.shift(c.getCoefficients());
-
-    //Point new_c(n); //origin
-    //WalkType walk(P, new_c, rng);
 
     if ( !get_sequence_of_polytopeballs
           <
@@ -623,14 +618,12 @@ double volume_cooling_balls(Polytope const& Pin,
                                       *(ratios.end() - 1),
                                       er0, parameters.win_len, 1200, walk_length,
                                       rng,
-                                      true,
                                       (*(BallSet.end() - 1)).radius())
               : estimate_ratio_interval<WalkType, Point>(*(BallSet.end() - 1),
                                                P,
                                                *(ratios.end() - 1),
                                                er0, parameters.win_len, 1200, prob,
                                                walk_length, rng,
-                                               true,
                                                (*(BallSet.end() - 1)).radius());
 
     PolyBall Pb;
@@ -656,7 +649,6 @@ double volume_cooling_balls(Polytope const& Pin,
     for ( ; balliter < BallSet.end() - 1; ++balliter, ++ratioiter)
     {
         Pb = PolyBall(P, *balliter);
-        //Pb.comp_diam(diameter);
         vol *= (!parameters.window2) ?
                     1 / estimate_ratio_interval<WalkType, Point>(Pb,
                                                        *(balliter + 1),
