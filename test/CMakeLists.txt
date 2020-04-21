@@ -135,6 +135,9 @@ else ()
   add_test(NAME volume_cb_zonotopes_uniform_zonotopes
            COMMAND volume_cb_zonotopes -tc=uniform_zonotopes)
 
+  add_executable (volume_cb_vpoly_intersection_vpoly volume_cb_vpoly_intersection_vpoly.cpp $<TARGET_OBJECTS:test_main>)
+  add_test(NAME volume_cb_vpoly_intersection_vpoly_random_vpoly_sphere
+           COMMAND volume_cb_vpoly_intersection_vpoly -tc=random_vpoly_sphere)
 
   #add_test(NAME volume_cube COMMAND volume_test -tc=cube)
   #add_test(NAME volume_cross COMMAND volume_test -tc=cross)
@@ -199,6 +202,7 @@ else ()
   TARGET_LINK_LIBRARIES(volume_cb_hpolytope ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(volume_cb_vpolytope ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(volume_cb_zonotopes ${LP_SOLVE})
+  TARGET_LINK_LIBRARIES(volume_cb_vpoly_intersection_vpoly ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_sob ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_cg ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_cb ${LP_SOLVE})

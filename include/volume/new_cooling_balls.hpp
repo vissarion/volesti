@@ -295,7 +295,6 @@ bool get_sequence_of_polytopeballs(Polytope& P,
                                    int const& Ntot,
                                    NT const& radius,
                                    unsigned int const& walk_length,
-                                   NT& diameter,
                                    cooling_ball_parameters<NT> parameters,
                                    RNG& rng)
 {
@@ -585,7 +584,7 @@ double volume_cooling_balls(Polytope const& Pin,
     auto InnerBall = P.ComputeInnerBall();
     NT radius = InnerBall.second;
     Point c = InnerBall.first;
-    NT diameter = P.ComputeDiameter();
+    //NT diameter = P.ComputeDiameter();
 
     std::vector<BallType> BallSet;
     std::vector<NT> ratios;
@@ -603,7 +602,7 @@ double volume_cooling_balls(Polytope const& Pin,
             RandomPointGenerator,
             PolyBall
           >(P, BallSet, ratios,
-            N_times_nu, radius, walk_length, diameter,
+            N_times_nu, radius, walk_length,
             parameters, rng) )
     {
         return -1.0;
@@ -657,7 +656,7 @@ double volume_cooling_balls(Polytope const& Pin,
     for ( ; balliter < BallSet.end() - 1; ++balliter, ++ratioiter)
     {
         Pb = PolyBall(P, *balliter);
-        Pb.comp_diam(diameter);
+        //Pb.comp_diam(diameter);
         vol *= (!parameters.window2) ?
                     1 / estimate_ratio_interval<WalkType, Point>(Pb,
                                                        *(balliter + 1),
