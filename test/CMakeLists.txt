@@ -139,6 +139,10 @@ else ()
   add_test(NAME volume_cb_vpoly_intersection_vpoly_random_vpoly_sphere
            COMMAND volume_cb_vpoly_intersection_vpoly -tc=random_vpoly_sphere)
 
+  add_executable (new_rounding_test new_rounding_test.cpp $<TARGET_OBJECTS:test_main>)
+  add_test(NAME new_rounding_test_round_skinny_cube
+           COMMAND new_rounding_test -tc=round_skinny_cube)
+
   #add_test(NAME volume_cube COMMAND volume_test -tc=cube)
   #add_test(NAME volume_cross COMMAND volume_test -tc=cross)
   #add_test(NAME volume_birkhoff COMMAND volume_test -tc=birk)
@@ -203,6 +207,7 @@ else ()
   TARGET_LINK_LIBRARIES(volume_cb_vpolytope ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(volume_cb_zonotopes ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(volume_cb_vpoly_intersection_vpoly ${LP_SOLVE})
+  TARGET_LINK_LIBRARIES(new_rounding_test ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_sob ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_cg ${LP_SOLVE})
   TARGET_LINK_LIBRARIES(benchmarks_cb ${LP_SOLVE})

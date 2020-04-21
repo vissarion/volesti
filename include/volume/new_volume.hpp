@@ -32,6 +32,7 @@
 #include "ballintersectconvex.h"
 #include "zonoIntersecthpoly.h"
 #include "vpolyintersectvpoly.h"
+#include "new_rounding.hpp"
 #include "samplers.h"
 #include "rounding.h"
 #include "gaussian_samplers.h"
