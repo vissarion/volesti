@@ -423,122 +423,161 @@ struct BRDHRWalk
 };
 
 
-template <
-        typename NT,
-        typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
-        typename Polytope
-        >
-NT ComputeDiameter(Polytope &P) {
-    typedef typename Polytope::PointType Point;
-    typedef typename Polytope::MT MT;
-    typedef typename Polytope::VT VT;
-    typedef HPolytope <Point> Hpolytope;
-    typedef Zonotope <Point> zonotope;
-    typedef VPolytope <Point> Vpolytope;
-    typedef ZonoIntersectHPoly <zonotope, Hpolytope> ZonoHPoly;
-    typedef Ball<Point> BallType;
-    typedef BallIntersectPolytope<Hpolytope,BallType> BallHpolytope;
-    typedef BallIntersectPolytope<Vpolytope ,BallType> BallVpolytope;
-    typedef BallIntersectPolytope<zonotope,BallType> Ballzonotope;
-    typedef IntersectionOfVpoly< Vpolytope, RandomNumberGenerator > VpIntVp;
+template <typename GenericPolytope>
+struct compute_diameter
+{
+    template <typename NT>
+    static NT compute(GenericPolytope) {}
+};
 
-    NT diameter = NT(0);
 
-    if (eqTypes<Polytope, Hpolytope>())
-    {
-        diameter = NT(4) * std::sqrt(NT(P.dimension())) * P.InnerBall().second;
-    }
-    else if (eqTypes<Polytope, Vpolytope>())
-    {
-        NT diam_iter;
-        MT V = P.get_mat();
-        for (int i = 0; i < V.rows(); ++i) {
-            for (int j = 0; j < V.rows(); ++j) {
-                if (i != j) {
-                    diam_iter = (V.row(i) - V.row(j)).norm();
-                    if (diam_iter > diameter) diameter = diam_iter;
-                }
-            }
-        }
-    }
-    else if (eqTypes<Polytope, zonotope>())
-    {
-        MT V = P.get_mat();
-        int k = V.rows(), max_index = -1;
-        MT D = V.transpose() * V;
-        D = (D + D.transpose()) / 2.0;
-        Eigen::SelfAdjointEigenSolver <MT> es(D);
-        MT D2 = es.eigenvalues().asDiagonal(), Q = es.eigenvectors();
-
-        NT max_eig = 0.0;
-        for (int i = 0; i < P.dimension(); ++i) {
-            if (es.eigenvalues()[i] > max_eig) {
-                max_eig = es.eigenvalues()[i];
-                max_index = i;
-            }
-        }
-
-        VT max_eigvec = -1.0 * Q.col(max_index);
-        VT obj_fun = max_eigvec.transpose() * V.transpose(), x0(k);
-
-        for (int j = 0; j < k; ++j) x0(j) = (obj_fun(j) < 0.0) ? -1.0 : 1.0;
-
-        diameter = 2.0 * (V.transpose() * x0).norm();
-    }
-    else if (eqTypes<Polytope, BallHpolytope>() || eqTypes<Polytope, BallVpolytope>() || eqTypes<Polytope, Ballzonotope>())
-    {
-        diameter = NT(2) * P.radius();
-    }
-    else if (eqTypes<Polytope, VpIntVp >())
-    {
-        diameter = 2.0 * NT(P.dimension()) * P.InnerBall().second;
-    }
-    else if (eqTypes<Polytope, ZonoHPoly >())
-    {
-        PushBackWalkPolicy push_back_policy;
-
-        typedef typename BCDHRWalk::template Walk
-                <
-                        Hpolytope,
-                        RandomNumberGenerator
-                > BCdhrWalk;
-        typedef BoundaryRandomPointGenerator<BCdhrWalk> BCdhrRandomPointGenerator;
-
-        MT G = P.get_T().transpose();
-        MT AG = P.get_mat()*G;
-        int k = G.cols(), d = P.dimension();
-        MT eyes1(k, 2*k);
-        eyes1 << MT::Identity(k,k), -1.0*MT::Identity(k,k);
-        MT M1(k, 4*k);
-        M1 << AG.transpose(), eyes1;
-        MT M = M1.transpose();
-        VT b = P.get_vec();
-
-        VT bb(4*k);
-        for (int i = 0; i < 4*k; ++i) bb(i) = (i < 2*k) ? b(i) : 1.0;
-
-        Hpolytope HP;
-        HP.init(d, M, bb);
-        RandomNumberGenerator rng(HP.dimension());
-
-        std::list<Point> randPoints;
-        std::pair<Point, NT> InnerBall = HP.ComputeInnerBall();
-        Point q = InnerBall.first;
-        BCdhrRandomPointGenerator::apply(HP, q, 4*d*d, 1,
-                                            randPoints, push_back_policy, rng);
-        typename std::list<Point>::iterator rpit=randPoints.begin();
-        NT max_norm = 0.0, iter_norm;
-        for ( ; rpit!=randPoints.end(); rpit++) {
-            iter_norm = (G*(*rpit).getCoefficients()).norm();
-            if (iter_norm > max_norm) max_norm = iter_norm;
-        }
-        diameter = NT(2) * max_norm;
-    }
-
+template <typename Point>
+struct compute_diameter<HPolytope<Point>>
+{
+template <typename NT>
+static NT compute(HPolytope<Point> &P)
+{
+    NT diameter = NT(4) * std::sqrt(NT(P.dimension())) * P.InnerBall().second;
     P.set_diameter(diameter);
     return diameter;
-
 }
+};
+
+template <typename Point>
+struct compute_diameter<VPolytope<Point>>
+{
+template <typename NT>
+static NT compute(VPolytope<Point> &P)
+{
+    typedef typename VPolytope<Point>::MT MT;
+    NT diameter = NT(0), diam_iter;
+    MT V = P.get_mat();
+    for (int i = 0; i < V.rows(); ++i) {
+        for (int j = 0; j < V.rows(); ++j) {
+            if (i != j) {
+                diam_iter = (V.row(i) - V.row(j)).norm();
+                if (diam_iter > diameter) diameter = diam_iter;
+            }
+        }
+    }
+    P.set_diameter(diameter);
+    return diameter;
+}
+};
+
+template <typename Point>
+struct compute_diameter<Zonotope<Point>>
+{
+template <typename NT>
+static NT compute(Zonotope<Point> &P)
+{
+    typedef typename Zonotope<Point>::MT MT;
+    typedef typename Zonotope<Point>::VT VT;
+
+    MT V = P.get_mat();
+    int k = V.rows(), max_index = -1;
+    MT D = V.transpose() * V;
+    D = (D + D.transpose()) / 2.0;
+    Eigen::SelfAdjointEigenSolver <MT> es(D);
+    MT D2 = es.eigenvalues().asDiagonal(), Q = es.eigenvectors();
+
+    NT max_eig = NT(0);
+    for (int i = 0; i < P.dimension(); ++i) {
+        if (es.eigenvalues()[i] > max_eig) {
+            max_eig = es.eigenvalues()[i];
+            max_index = i;
+        }
+    }
+
+    VT max_eigvec = -1.0 * Q.col(max_index);
+    VT obj_fun = max_eigvec.transpose() * V.transpose(), x0(k);
+
+    for (int j = 0; j < k; ++j) x0(j) = (obj_fun(j) < 0.0) ? -1.0 : 1.0;
+
+    NT diameter = NT(2) * (V.transpose() * x0).norm();
+    P.set_diameter(diameter);
+    return diameter;
+}
+};
+
+template <typename Point, typename RandomNumberGenerator>
+struct compute_diameter<IntersectionOfVpoly<VPolytope<Point>, RandomNumberGenerator>>
+{
+template <typename NT>
+static NT compute(IntersectionOfVpoly<VPolytope<Point>, RandomNumberGenerator> &P)
+{
+    NT diameter = NT(2) * NT(P.dimension()) * P.InnerBall().second;
+    P.set_diameter(diameter);
+    return diameter;
+}
+};
+
+template <typename Polytope, typename Point>
+struct compute_diameter<BallIntersectPolytope<Polytope, Ball<Point>>>
+{
+template <typename NT>
+static NT compute(BallIntersectPolytope<Polytope, Ball<Point>> &P)
+{
+    NT diameter = NT(2) * P.radius();
+    P.set_diameter(diameter);
+    return diameter;
+}
+};
+
+template <typename Point>
+struct compute_diameter<ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>>
+{
+template <typename NT>
+static NT compute(ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>> &P)
+{
+    typedef typename ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>::VT VT;
+    typedef typename ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>::MT MT;
+    typedef HPolytope<Point> Hpolytope;
+
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RandomNumberGenerator;
+    PushBackWalkPolicy push_back_policy;
+    typedef typename BCDHRWalk::template Walk
+            <
+                    Hpolytope,
+                    RandomNumberGenerator
+            > BCdhrWalk;
+    typedef BoundaryRandomPointGenerator<BCdhrWalk> BCdhrRandomPointGenerator;
+
+    MT G = P.get_T().transpose();
+    MT AG = P.get_mat()*G;
+    int k = G.cols(), d = P.dimension();
+    MT eyes1(k, 2*k);
+    eyes1 << MT::Identity(k,k), NT(-1) * MT::Identity(k,k);
+    MT M1(k, 4*k);
+    M1 << AG.transpose(), eyes1;
+    MT M = M1.transpose();
+    VT b = P.get_vec();
+
+    VT bb(4*k);
+    for (int i = 0; i < 4*k; ++i) bb(i) = (i < 2*k) ? b(i) : 1.0;
+
+    Hpolytope HP;
+    HP.init(d, M, bb);
+
+    RandomNumberGenerator rng(HP.dimension());
+
+    std::list<Point> randPoints;
+    std::pair<Point, NT> InnerBall = HP.ComputeInnerBall();
+    Point q = InnerBall.first;
+    BCdhrRandomPointGenerator::apply(HP, q, 4*d*d, 1,
+                                     randPoints, push_back_policy, rng);
+    typename std::list<Point>::iterator rpit=randPoints.begin();
+    NT max_norm = NT(0), iter_norm;
+    for ( ; rpit!=randPoints.end(); rpit++) {
+        iter_norm = (G*(*rpit).getCoefficients()).norm();
+        if (iter_norm > max_norm) max_norm = iter_norm;
+    }
+    NT diameter = NT(2) * max_norm;
+    P.set_diameter(diameter);
+    return diameter;
+}
+};
+
 
 // billiard walk for uniform distribution
 struct BilliardWalk
@@ -628,7 +667,7 @@ private :
     {
         unsigned int n = P.dimension();
         const NT dl = 0.995;
-        NT diameter = ComputeDiameter<NT, RandomNumberGenerator>(P);
+        NT diameter = compute_diameter<GenericPolytope>::template compute<NT>(P);
 
         _lambdas.setZero(P.num_of_hyperplanes());
         _Av.setZero(P.num_of_hyperplanes());
