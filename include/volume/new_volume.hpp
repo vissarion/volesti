@@ -59,7 +59,7 @@ template
 struct Walk
 {
     typedef typename Polytope::PointType Point;
-    typedef typename Point::FT NT;
+    typedef typename Polytope::NT NT;
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
     typedef HPolytope<Point> Hpolytope;
