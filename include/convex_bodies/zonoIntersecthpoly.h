@@ -28,7 +28,7 @@ public:
     Zonotope first() const { return Z; }
     HPolytope second() const { return HP; }
 
-    int is_in(const PointType &p){
+    int is_in(const PointType &p) const {
         if(HP.is_in(p)==-1)
             return Z.is_in(p);
         return 0;
