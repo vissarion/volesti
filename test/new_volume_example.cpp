@@ -34,7 +34,7 @@ int main()
     typedef typename Kernel::Point    Point;
     typedef boost::mt19937    RNGType;
     typedef HPolytope<Point> Hpolytope;
-    typedef VPolytope<Point, RNGType> Vpolytope;
+    typedef VPolytope<Point> Vpolytope;
 
     Hpolytope HPoly = gen_cube<Hpolytope>(10, false);
     BallWalk BW(3);
