@@ -34,14 +34,14 @@ int main()
     typedef typename Kernel::Point    Point;
     typedef boost::mt19937    RNGType;
     typedef HPolytope<Point> Hpolytope;
-    typedef VPolytope<Point, RNGType> Vpolytope;
+    typedef VPolytope<Point> Vpolytope;
 
     Vpolytope VP;
     VP = gen_cross<Vpolytope>(10, true);
 
     // Estimate the volume
     double tstart;
-    VPolytope<Point, RNGType> VP2 = VP;
+    VPolytope<Point> VP2 = VP;
 
     VP.init(VP.dimension(), VP2.get_mat(), VP2.get_vec());
     tstart = (double)clock()/(double)CLOCKS_PER_SEC;
