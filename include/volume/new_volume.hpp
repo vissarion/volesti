@@ -41,56 +41,75 @@
 
 #include "khach.h"
 
+/////////////////// Random Walks
 
+<<<<<<< HEAD
 
 
 
 /////////////////// Random Walks
 
+
 // ball walk with uniform target distribution
 struct BallWalk
 {
+    BallWalk(double L)
+        :   param(L)
+    {}
 
-template
-<
-    typename Polytope,
-    typename RandomNumberGenerator
->
-struct Walk
-{
-    typedef typename Polytope::PointType Point;
-    typedef typename Polytope::NT NT;
-    typedef Ball<Point> BallType;
-    typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
-    typedef HPolytope<Point> Hpolytope;
-    typedef Zonotope<Point> zonotope;
-    typedef ZonoIntersectHPoly <zonotope, Hpolytope> ZonoHPoly;
-
-    Walk (Polytope const&, Point&, RandomNumberGenerator&) {}
-    Walk (BallPolytope const&, Point &, RandomNumberGenerator &) {}
-    Walk (BallType const&, Point &, RandomNumberGenerator &) {}
-    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &) {}
-
-    template<typename BallPolytope>
-    inline void apply(BallPolytope const& P,
-                      Point &p,   // a point to start
-                      unsigned int const& walk_length,
-                      RandomNumberGenerator &rng)
+    struct parameters
     {
-        const NT delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
+        parameters(double L)
+            :   m_L(L)
+        {}
+        double m_L;
+    };
 
-        for (auto j=0u; j<walk_length; ++j)
+    parameters param;
+
+    template
+    <
+            typename Polytope,
+            typename RandomNumberGenerator
+    >
+    struct Walk
+    {
+        typedef typename Polytope::PointType Point;
+        typedef typename Point::FT NT;
+        typedef Ball<Point> BallType;
+        typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
+        typedef HPolytope<Point> Hpolytope;
+        typedef Zonotope<Point> zonotope;
+        typedef ZonoIntersectHPoly <zonotope, Hpolytope> ZonoHPoly;
+
+        Walk (Polytope const&, Point&, RandomNumberGenerator&) {}
+        Walk (BallPolytope const&, Point &, RandomNumberGenerator &) {}
+        Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+        Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &) {}
+
+        template<typename BallPolytope, typename Parameters>
+        inline void apply(BallPolytope const& P,
+                          Point &p,   // a point to start
+                          unsigned int const& walk_length,
+                          RandomNumberGenerator &rng,
+                          Parameters const& parameters)
         {
-            Point y = GetPointInDsphere<Point>::apply(P.dimension(),
-                                                      delta,
-                                                      rng);
-            y += p;
-            if (P.is_in(y) == -1) p = y;
+            const NT delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
+
+            for (auto j=0u; j<walk_length; ++j)
+            {
+                Point y = GetPointInDsphere<Point>::apply(P.dimension(),
+                                                          delta,
+                                                          rng);
+                y += p;
+                if (P.is_in(y) == -1) p = y;
+            }
+            //std::cout << "use" << parameters.m_L << std::endl;
         }
-    }
-};
+    };
 
 };
+
 
 // random directions hit-and-run walk with uniform target distribution
 struct RDHRWalk
@@ -725,11 +744,13 @@ private :
 
 template
 <
-    typename WalkTypePolicy = CDHRWalk,
+    //typename WalkTypePolicy = CDHRWalk,
     typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
-    typename Polytope
+    typename Polytope,
+    typename WalkType
 >
 double volume_sequence_of_balls(Polytope const& Pin,
+                                WalkType walk,
                                 double const& error = 1.0,
                                 unsigned int const& walk_length = 1,
                                 unsigned int const& n_threads = 1)
@@ -739,12 +760,13 @@ double volume_sequence_of_balls(Polytope const& Pin,
     typedef Ball<Point> Ball;
     typedef BallIntersectPolytope<Polytope,Ball> BallPoly;
 
-    typedef typename WalkTypePolicy::template Walk
+    typedef typename WalkType::template Walk
                                               <
                                                 Polytope,
                                                 RandomNumberGenerator
-                                              > WalkType;
-    typedef RandomPointGenerator<WalkType> RandomPointGenerator;
+                                              > WalkTypeInner;
+
+    typedef RandomPointGenerator<WalkTypeInner> RandomPointGenerator;
 
     auto P(Pin); //copy and work with P because we are going to shift
     unsigned int n = P.dimension();
@@ -775,14 +797,14 @@ double volume_sequence_of_balls(Polytope const& Pin,
         std::list<Point> randPoints; //ds for storing rand points
 
         PushBackWalkPolicy push_back_policy;
-        RandomPointGenerator::apply(P, p, 1, 50*n, randPoints, push_back_policy, rng);
+        RandomPointGenerator::apply(P, p, 1, 50*n, randPoints, push_back_policy, rng, walk.param);
 
 #ifdef VOLESTI_DEBUG
         double tstart2 = (double)clock()/(double)CLOCKS_PER_SEC;
         std::cout<<"\nCompute "<<rnum<<" random points in P"<<std::endl;
 #endif
         RandomPointGenerator::apply(P, p, rnum-1, walk_length, randPoints,
-                                    push_back_policy, rng);
+                                    push_back_policy, rng, walk.param);
 
 #ifdef VOLESTI_DEBUG
         double tstop2 = (double)clock()/(double)CLOCKS_PER_SEC;
@@ -881,7 +903,7 @@ double volume_sequence_of_balls(Polytope const& Pin,
             CountingWalkPolicy<BallPoly> counting_policy(nump_PBSmall, PBSmall);
             RandomPointGenerator::apply(PBLarge, p_gen, rnum-nump_PBLarge,
                                         walk_length, randPoints,
-                                        counting_policy, rng);
+                                        counting_policy, rng, walk.param);
 
             nump_PBSmall = counting_policy.get_nump_PBSmall();
 

@@ -183,31 +183,33 @@ struct GetPointInDsphere
 ///
 
 template
-        <
-                typename Walk
-        >
+<
+    typename Walk
+>
 struct RandomPointGenerator
 {
     template
-            <
-                    typename Polytope,
-                    typename Point,
-                    typename PointList,
-                    typename WalkPolicy,
-                    typename RandomNumberGenerator
-            >
+    <
+        typename Polytope,
+        typename Point,
+        typename PointList,
+        typename WalkPolicy,
+        typename RandomNumberGenerator,
+        typename Parameters
+    >
     static void apply(Polytope& P,
                       Point &p,   // a point to start
                       unsigned int const& rnum,
                       unsigned int const& walk_length,
                       PointList &randPoints,
                       WalkPolicy &policy,
-                      RandomNumberGenerator &rng)
+                      RandomNumberGenerator &rng,
+                      Parameters const& parameters)
     {
         Walk walk(P, p, rng);
         for (unsigned int i=0; i<rnum; ++i)
         {
-            walk.template apply(P, p, walk_length, rng);
+            walk.template apply(P, p, walk_length, rng, parameters);
             policy.apply(randPoints, p);
         }
     }
