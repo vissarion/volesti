@@ -41,14 +41,8 @@
 
 #include "khach.h"
 
-/////////////////// Random Walks
-
-<<<<<<< HEAD
-
-
 
 /////////////////// Random Walks
-
 
 // ball walk with uniform target distribution
 struct BallWalk
@@ -59,7 +53,7 @@ struct BallWalk
 
     struct parameters
     {
-        parameters(double L)
+        parameters()
             :   m_L(L)
         {}
         double m_L;
@@ -106,6 +100,14 @@ struct BallWalk
             }
             //std::cout << "use" << parameters.m_L << std::endl;
         }
+
+        inline void update_delta(NT delta)
+        {
+            _delta = delta;
+        }
+
+    private:
+        double _delta;
     };
 
 };
@@ -601,6 +603,24 @@ static NT compute(ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>> &P)
 // billiard walk for uniform distribution
 struct BilliardWalk
 {
+    BilliardWalk(double L)
+            :   param(L), L_set(true)
+    {}
+
+    BilliardWalk()
+            :   param(0), L_set(false)
+    {}
+
+    struct parameters
+    {
+        parameters(double L)
+                :   m_L(L)
+        {}
+        double m_L;
+    };
+
+    parameters param;
+    bool L_set;
 
 template
 <
@@ -617,22 +637,23 @@ struct Walk
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    Walk(Polytope& P, Point & p, RandomNumberGenerator &rng)
+    Walk(Polytope& P, Point & p, RandomNumberGenerator &rng, parameters &params)
     {
-        initialize(P, p, rng);
+        initialize(P, p, rng, params);
     }
 
-    Walk(BallPolytope& P, Point & p, RandomNumberGenerator &rng)
+    Walk(BallPolytope& P, Point & p, RandomNumberGenerator &rng, parameters &params)
     {
-        initialize(P, p, rng);
+        initialize(P, p, rng, params);
     }
 
-    Walk(ZonoHPoly& P, Point & p, RandomNumberGenerator &rng)
+    Walk(ZonoHPoly& P, Point & p, RandomNumberGenerator &rng, parameters &params)
     {
-        initialize(P, p, rng);
+        initialize(P, p, rng, params);
     }
 
-    Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+    Walk (BallType const&, Point &, RandomNumberGenerator &,  parameters &) {}
+
 
     template
     <
@@ -644,8 +665,8 @@ struct Walk
                       RandomNumberGenerator &rng)
     {
         unsigned int n = P.dimension();
-        NT diameter = P.get_diameter();
-        NT T = rng.sample_urdist() * diameter;
+        //NT diameter = P.get_diameter();
+        NT T = rng.sample_urdist() * _L;
         const NT dl = 0.995;
 
         for (auto j=0u; j<walk_length; ++j)
@@ -669,9 +690,14 @@ struct Walk
                 P.compute_reflection(_v, _p, pbpair.second);
                 it++;
             }
-            if (it == 10*n) _p = p0;
+            if (it == 30*n) _p = p0;
         }
         p = _p;
+    }
+
+    inline void update_L(NT L)
+    {
+        _L = L;
     }
 
 private :
@@ -682,18 +708,27 @@ private :
     >
     inline void initialize(GenericPolytope& P,
                            Point &p,
-                           RandomNumberGenerator &rng)
+                           RandomNumberGenerator &rng,
+                           parameters &params)
     {
         unsigned int n = P.dimension();
         const NT dl = 0.995;
-        NT diameter = compute_diameter<GenericPolytope>::template compute<NT>(P);
+        NT diameter;
+        if(params.L_set)
+        {
+            _L = params.m_L;
+        }
+        else
+        {
+            _L = compute_diameter<GenericPolytope>::template compute<NT>(P);
+        }
 
         _lambdas.setZero(P.num_of_hyperplanes());
         _Av.setZero(P.num_of_hyperplanes());
         _p = p;
         _v = GetDirection<Point>::apply(n, rng);
 
-        NT T = rng.sample_urdist() * diameter;
+        NT T = rng.sample_urdist() * _L;
         Point p0 = _p;
         int it = 0;
 
@@ -709,7 +744,7 @@ private :
         T -= _lambda_prev;
         P.compute_reflection(_v, _p, pbpair.second);
 
-        while (it < 10*n)
+        while (it < 30*n)
         {
             std::pair<NT, int> pbpair
                     = P.line_positive_intersect(_p, _v, _lambdas, _Av, _lambda_prev);
@@ -727,6 +762,7 @@ private :
         if (it == 10*n) _p = p0;
     }
 
+    double _L;
     Point _p;
     Point _v;
     NT _lambda_prev;
