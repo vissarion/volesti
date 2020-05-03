@@ -46,7 +46,7 @@ int main()
     //VP.init(VP.dimension(), VP2.get_mat(), VP2.get_vec());
     double tstart = (double)clock()/(double)CLOCKS_PER_SEC;
     std::cout << "Ball (cross) = "
-              << volume_cooling_balls<BallWalk>(VP) << " , ";
+              << volume_cooling_balls<BallWalk>(HPoly) << " , ";
     std::cout << (double)clock()/(double)CLOCKS_PER_SEC - tstart << std::endl;
 
     return 0;

@@ -344,6 +344,17 @@ struct update_delta<GaussianBallWalk::Walk<Polytope, RandomNumberGenerator>>
     }
 };
 
+template <typename Polytope, typename RandomNumberGenerator>
+struct update_delta<BilliardWalk::Walk<Polytope, RandomNumberGenerator>>
+{
+    template <typename NT>
+    static void apply(BilliardWalk::Walk<Polytope, RandomNumberGenerator> walk,
+                      NT L)
+    {
+        walk.update_delta(L);
+    }
+};
+
 
 ////////////////////////////// Random Point Generators
 ///

@@ -206,10 +206,34 @@ struct RandomPointGenerator
                       RandomNumberGenerator &rng,
                       Parameters const& parameters)
     {
+        Walk walk(P, p, rng,  parameters);
+        for (unsigned int i=0; i<rnum; ++i)
+        {
+            walk.template apply(P, p, walk_length, rng);
+            policy.apply(randPoints, p);
+        }
+    }
+
+    template
+            <
+                    typename Polytope,
+                    typename Point,
+                    typename PointList,
+                    typename WalkPolicy,
+                    typename RandomNumberGenerator
+            >
+    static void apply(Polytope& P,
+                      Point &p,   // a point to start
+                      unsigned int const& rnum,
+                      unsigned int const& walk_length,
+                      PointList &randPoints,
+                      WalkPolicy &policy,
+                      RandomNumberGenerator &rng)
+    {
         Walk walk(P, p, rng);
         for (unsigned int i=0; i<rnum; ++i)
         {
-            walk.template apply(P, p, walk_length, rng, parameters);
+            walk.template apply(P, p, walk_length, rng);
             policy.apply(randPoints, p);
         }
     }
