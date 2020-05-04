@@ -232,11 +232,6 @@ double volume (Rcpp::Reference P,
         round = (!rounding.isNotNull()) ? false : Rcpp::as<bool>(rounding);
     }
 
-    if (Rcpp::as<Rcpp::List>(settings).containsElementNamed("hpoly")) {
-        hpoly = Rcpp::as<bool>(Rcpp::as<Rcpp::List>(settings)["hpoly"]);
-        if ((hpoly && !CB) || (type != 3 && CB && hpoly))
-            Rf_warning("flag 'hpoly' can be used to only in MMC of CB algorithm for zonotopes.");
-    }
     if (Rcpp::as<Rcpp::List>(settings).containsElementNamed("win_len")) {
         win_len = Rcpp::as<int>(Rcpp::as<Rcpp::List>(settings)["win_len"]);
         if (!CB && !CG) Rf_warning("flag 'win_len' can be used only for CG or CB algorithms.");
@@ -261,6 +256,15 @@ double volume (Rcpp::Reference P,
             // Zonotope
             zonotope ZP;
             ZP.init(n, Rcpp::as<MT>(P.field("G")), VT::Ones(Rcpp::as<MT>(P.field("G")).rows()));
+            if (Rcpp::as<Rcpp::List>(settings).containsElementNamed("hpoly")) {
+                hpoly = Rcpp::as<bool>(Rcpp::as<Rcpp::List>(settings)["hpoly"]);
+                if (hpoly && !CB)
+                    Rf_warning("flag 'hpoly' can be used to only in MMC of CB algorithm for zonotopes.");
+            } else if (ZP.num_of_generators() / ZP.dimension() < 5 ) {
+                hpoly = true;
+            } else {
+                hpoly = false;
+            }
             return generic_volume<RNGType>(ZP, walkL, e, CG, CB, hpoly, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
