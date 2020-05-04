@@ -51,23 +51,14 @@ Rcpp::List rounding (Rcpp::Reference P){
     zonotope ZP;
     InterVP VPcVP;
 
-    bool rand_only=false,
-            NN=false,
-            birk=false,
-            verbose=false,
-            cdhr=false, rdhr = false, ball_walk = false, billiard = false;
-    NT delta = -1.0, diam = -1.0;
-
-    unsigned int n = P.field("dimension");
-    unsigned int rnum = std::pow(1.0,-2.0) * 400 * n * std::log(n);
-    unsigned int walkL = 10+n/10;
+    bool cdhr=false, rdhr = false, ball_walk = false, billiard = false;
+    unsigned int n = P.field("dimension"), walkL, type = P.field("type");;
 
     std::pair <Point, NT> InnerBall;
     Rcpp::NumericMatrix Mat;
-    int type = P.field("type");
 
     if (type == 1) {
-        walkL = 10 + 10/n;
+        walkL = 10 + 10*n;
         cdhr = true;
     } else {
         walkL = 5;
@@ -85,14 +76,12 @@ Rcpp::List rounding (Rcpp::Reference P){
         case 2: {
             VP.init(n, Rcpp::as<MT>(P.field("V")), VT::Ones(Rcpp::as<MT>(P.field("V")).rows()));
             InnerBall = VP.ComputeInnerBall();
-            VP.comp_diam(diam, 0.0);
             break;
         }
         case 3: {
             // Zonotope
             ZP.init(n, Rcpp::as<MT>(P.field("G")), VT::Ones(Rcpp::as<MT>(P.field("G")).rows()));
             InnerBall = ZP.ComputeInnerBall();
-            ZP.comp_diam(diam, 0.0);
             break;
         }
         case 4: {
@@ -100,19 +89,12 @@ Rcpp::List rounding (Rcpp::Reference P){
         }
     }
 
-    unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
-    // the random engine with this seed
-    RNGType rng(seed);
-    boost::random::uniform_real_distribution<>(urdist);
-    boost::random::uniform_real_distribution<> urdist1(-1,1);
-
-    // initialization
-    vars<NT, RNGType> var(rnum,n,walkL,1,0.0,0.0,0,0.0,0,InnerBall.second,diam,rng,urdist,urdist1,
-                          delta,verbose,rand_only,false,NN,birk,ball_walk,cdhr,rdhr,billiard);
     std::pair< std::pair<MT, VT>, NT > round_res;
 
     switch (type) {
         case 1: {
+            round_polytope(Polytope &P, std::pair<Point,NT> &InnerBall,
+            const unsigned int &walk_length, RNG &rng)
             round_res = rounding_min_ellipsoid<MT, VT>(HP, InnerBall, var);
             Mat = extractMatPoly(HP);
             break;

@@ -229,7 +229,8 @@ template
         >
 double volume_cooling_hpoly (Zonotope const& Pin,
                          double const& error = 1.0,
-                         unsigned int const& walk_length = 1)
+                         unsigned int const& walk_length = 1,
+                             unsigned int const& win_len = 200)
 {
 
     typedef typename Zonotope::PointType Point;
@@ -256,7 +257,7 @@ double volume_cooling_hpoly (Zonotope const& Pin,
     auto P(Pin);
     RandomNumberGenerator rng(P.dimension());
     RandomNumberGenerator rng_diam(P.num_of_generators());
-    cooling_ball_parameters<NT> parameters;
+    cooling_ball_parameters<NT> parameters(win_len);
 
     int n = P.dimension();
     NT prob = parameters.p, ratio;

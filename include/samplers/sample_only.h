@@ -22,25 +22,117 @@
 #ifndef SAMPLE_ONLY_H
 #define SAMPLE_ONLY_H
 
-template <typename Point, typename NT, typename PointList, typename Polytope, typename UParameters, typename GParameters>
-void sampling_only(PointList &randPoints, Polytope &P, const unsigned int walk_len,
-                   const unsigned int rnum, bool gaussian, const NT &a, const bool boundary,
-                   const Point &starting_point, int nburns, UParameters const& var1, GParameters const& var2) {
+template <typename WalkTypePolicy, typename RNGType, typename Point, typename NT, typename PointList, typename Polytope, typename UParameters, typename GParameters>
+void sampling_only(PointList &randPoints, Polytope &P, const unsigned int &walk_len,
+                   const unsigned int &rnum, const bool &boundary,
+                   const Point &starting_point, unsigned int const& nburns)
+{
+    typedef typename WalkTypePolicy::template Walk
+            <
+                    Polytope,
+                    RandomNumberGenerator
+            > walk;
 
-    typedef typename UParameters::RNGType RNGType;
+    RandomNumberGenerator rng(P.dimension());
+    PushBackWalkPolicy push_back_policy;
+
+    Point p = starting_point;
+    if (!boundary) {
+        typedef RandomPointGenerator <walk> RandomPointGenerator;
+        RandomPointGenerator::apply(P, p, nburns, walk_len, randPoints,
+                                    push_back_policy, rng);
+        randPoints.clear();
+        RandomPointGenerator::apply(P, p, rnum, walk_len, randPoints,
+                                    push_back_policy, rng);
+
+    }
+    else {
+        typedef BoundaryRandomPointGenerator <walk> BoundaryRandomPointGenerator;
+        BoundaryRandomPointGenerator::apply(P, p, nburns, walk_len,
+                                            randPoints, push_back_policy, rng);
+        randPoints.clear();
+        BoundaryRandomPointGenerator::apply(P, p, rnum / 2, walk_len,
+                                            randPoints, push_back_policy, rng);
+    }
+}
+
+
+template <typename WalkTypePolicy, typename RNGType, typename Point, typename NT, typename PointList, typename Polytope, typename UParameters, typename GParameters>
+void sampling_only(PointList &randPoints, Polytope &P, const unsigned int &walk_len,
+                   const unsigned int &rnum, const NT &a,
+                   const Point &starting_point, unsigned int const& nburns) {
+
+    typedef typename WalkTypePolicy::template Walk
+            <
+                    Polytope,
+                    RandomNumberGenerator
+            > walk;
+
+    RandomNumberGenerator rng(P.dimension());
+    PushBackWalkPolicy push_back_policy;
+
     Point p = starting_point;
 
-    if (nburns > 0 ) rand_point_generator(P, p, 1, nburns, randPoints, var1);
-
+    GaussianRandomPointGenerator <walk> RandomPointGenerator;
+    RandomPointGenerator::apply(P, p, a, nburns, walk_len, randPoints,
+                                push_back_policy, rng);
     randPoints.clear();
-    if (boundary) {
-        boundary_rand_point_generator(P, p, rnum/2, walk_len, randPoints, var1);
-    } else if (!gaussian){
-        rand_point_generator(P, p, rnum, walk_len, randPoints, var1);
-    } else {
-        rand_gaussian_point_generator(P, p, rnum, walk_len, randPoints, a, var2);
-    }
+    RandomPointGenerator::apply(P, p, a, rnum, walk_len, randPoints,
+                                push_back_policy, rng);
 
+
+}
+
+
+template <typename WalkTypePolicy, typename RNGType, typename Point, typename NT, typename PointList, typename Polytope, typename UParameters, typename GParameters>
+void sampling_only(PointList &randPoints, Polytope &P, WalkTypePolicy &WalkType, const unsigned int &walk_len,
+                   const unsigned int &rnum, const NT &a,
+                   const Point &starting_point, unsigned int const& nburns) {
+
+    typedef typename WalkTypePolicy::template Walk
+            <
+                    Polytope,
+                    RandomNumberGenerator
+            > walk;
+
+    RandomNumberGenerator rng(P.dimension());
+    PushBackWalkPolicy push_back_policy;
+
+    Point p = starting_point;
+
+    GaussianRandomPointGenerator <walk> RandomPointGenerator;
+    RandomPointGenerator::apply(P, p, a, nburns, walk_len, randPoints,
+                                push_back_policy, rng, WalkType.param);
+    randPoints.clear();
+    RandomPointGenerator::apply(P, p, a, rnum, walk_len, randPoints,
+                                push_back_policy, rng, WalkType.param);
+
+
+}
+
+
+template <typename WalkTypePolicy, typename RNGType, typename Point, typename NT, typename PointList, typename Polytope, typename UParameters, typename GParameters>
+void sampling_only(PointList &randPoints, Polytope &P, WalkTypePolicy &WalkType, const unsigned int &walk_len,
+                   const unsigned int &rnum, bool gaussian, const NT &a,
+                   const Point &starting_point, unsigned int const& nburns)
+{
+    typedef typename WalkTypePolicy::template Walk
+            <
+                    Polytope,
+                    RandomNumberGenerator
+            > walk;
+
+    RandomNumberGenerator rng(P.dimension());
+    PushBackWalkPolicy push_back_policy;
+    typedef RandomPointGenerator<walk> RandomPointGenerator;
+
+    Point p = starting_point;
+
+    RandomPointGenerator::apply(P, p, nburns, walk_len, randPoints,
+                                push_back_policy, rng, WalkType.param);
+    randPoints.clear();
+    RandomPointGenerator::apply(P, p, rnum, walk_len, randPoints,
+                                push_back_policy, rng, WalkType.param);
 }
 
 #endif

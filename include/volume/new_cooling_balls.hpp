@@ -29,14 +29,14 @@
 template <typename NT>
 struct cooling_ball_parameters
 {
-    cooling_ball_parameters()
+    cooling_ball_parameters(unsigned int win_len)
         :   lb(0.1)
         ,   ub(0.15)
         ,   p(0.75)
         ,   rmax(0)
         ,   alpha(0.2)
-        ,   win_len(1000)
-        ,   N(150)
+        ,   win_len(win_len)
+        ,   N(125)
         ,   nu(10)
         ,   window2(false)
     {}
@@ -670,7 +670,8 @@ template
 >
 double volume_cooling_balls(Polytope const& Pin,
                             double const& error = 1.0,
-                            unsigned int const& walk_length = 1)
+                            unsigned int const& walk_length = 1,
+                            unsigned int const& win_len = 250)
 {
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
@@ -688,7 +689,7 @@ double volume_cooling_balls(Polytope const& Pin,
 
     auto P(Pin);
     RandomNumberGenerator rng(P.dimension());
-    cooling_ball_parameters<NT> parameters;
+    cooling_ball_parameters<NT> parameters(win_len);
 
     int n = P.dimension();
     NT prob = parameters.p;
