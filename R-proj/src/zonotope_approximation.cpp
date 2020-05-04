@@ -68,8 +68,6 @@ Rcpp::List zono_approx (Rcpp::Reference Z,
                 Rcpp::as<Rcpp::List>(settings)["walk_length"]);
         e = (!Rcpp::as<Rcpp::List>(settings).containsElementNamed("error")) ? 0.1 : Rcpp::as<NT>(
                 Rcpp::as<Rcpp::List>(settings)["error"]);
-        round = (!Rcpp::as<Rcpp::List>(settings).containsElementNamed("rounding")) ? false : Rcpp::as<bool>(
-                Rcpp::as<Rcpp::List>(settings)["rounding"]);
         win_len = (!Rcpp::as<Rcpp::List>(settings).containsElementNamed("win_len")) ? 200 : Rcpp::as<int>(
                 Rcpp::as<Rcpp::List>(settings)["win_len"]);
 
@@ -83,12 +81,12 @@ Rcpp::List zono_approx (Rcpp::Reference Z,
         } else {
             hpoly = false;
         }
-        
+
         NT vol;
         if (!hpoly) {
             vol = volume_cooling_balls<BilliardWalk, RNGType>(ZP, e, walkL, win_len);
         } else {
-            vol = volume_cooling_hpoly<BilliardWalk, RNGType>(P, e, walkL, win_len);
+            vol = volume_cooling_hpoly<BilliardWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
         }
         ratio = std::pow(vol_red / vol, 1.0 / NT(n));
     }

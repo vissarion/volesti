@@ -95,14 +95,14 @@ struct BallWalk
             _delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
         }
 
-        Walk (Polytope const& P, Point&, RandomNumberGenerator&, parameters params) {
+        Walk (Polytope const& P, Point&, RandomNumberGenerator&, parameters const& params) {
             if (params.set_delta) {
                 _delta = params.m_L;
             } else {
                 _delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
             }
         }
-        Walk (BallPolytope const& P, Point &, RandomNumberGenerator &, parameters params) {
+        Walk (BallPolytope const& P, Point &, RandomNumberGenerator &, parameters const& params) {
             if (params.set_delta) {
                 _delta = params.m_L;
             } else {
@@ -111,7 +111,7 @@ struct BallWalk
         }
         Walk (BallType const&, Point &, RandomNumberGenerator &, parameters &) {}
 
-        Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &, parameters params) {
+        Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &, parameters const& params) {
             if (params.set_delta) {
                 _delta = params.m_L;
             } else {
@@ -171,22 +171,39 @@ struct Walk
     typedef Zonotope<Point> zonotope;
     typedef ZonoIntersectHPoly <zonotope, Hpolytope> ZonoHPoly;
 
-    Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(Polytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
-    Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(BallPolytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
-    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(ZonoHPoly const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
     Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+
+    Walk(Polytope const& P, Point &p, RandomNumberGenerator &rng, parameters &)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk(BallPolytope const& P, Point &p, RandomNumberGenerator &rng, parameters &)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk(ZonoHPoly const& P, Point &p, RandomNumberGenerator &rng, parameters &)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk (BallType const&, Point &, RandomNumberGenerator &, parameters &) {}
 
     template
     <
@@ -254,22 +271,39 @@ struct Walk
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
     typedef ZonoIntersectHPoly <zonotope, Hpolytope> ZonoHPoly;
 
-    Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(Polytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
-    Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(BallPolytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
-    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &rng)
+    Walk(ZonoHPoly const& P, Point &p, RandomNumberGenerator &rng)
     {
         initialize(P, p, rng);
     }
 
     Walk (BallType const&, Point &, RandomNumberGenerator &) {}
+
+    Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
+    {
+        initialize(P, p, rng);
+    }
+
+    Walk (BallType const&, Point &, RandomNumberGenerator &, parameters &) {}
 
     template
     <
@@ -497,10 +531,10 @@ template <typename Point>
 struct compute_diameter<HPolytope<Point>>
 {
 template <typename NT>
-static NT compute(HPolytope<Point> &P)
+static NT compute(HPolytope<Point> const& P)
 {
     NT diameter = NT(4) * std::sqrt(NT(P.dimension())) * P.InnerBall().second;
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -509,7 +543,7 @@ template <typename Point>
 struct compute_diameter<VPolytope<Point>>
 {
 template <typename NT>
-static NT compute(VPolytope<Point> &P)
+static NT compute(VPolytope<Point> const& P)
 {
     typedef typename VPolytope<Point>::MT MT;
     NT diameter = NT(0), diam_iter;
@@ -522,7 +556,7 @@ static NT compute(VPolytope<Point> &P)
             }
         }
     }
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -531,7 +565,7 @@ template <typename Point>
 struct compute_diameter<Zonotope<Point>>
 {
 template <typename NT>
-static NT compute(Zonotope<Point> &P)
+static NT compute(Zonotope<Point> const& P)
 {
     typedef typename Zonotope<Point>::MT MT;
     typedef typename Zonotope<Point>::VT VT;
@@ -557,7 +591,7 @@ static NT compute(Zonotope<Point> &P)
     for (int j = 0; j < k; ++j) x0(j) = (obj_fun(j) < 0.0) ? -1.0 : 1.0;
 
     NT diameter = NT(2) * (V.transpose() * x0).norm();
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -566,10 +600,10 @@ template <typename Point, typename RandomNumberGenerator>
 struct compute_diameter<IntersectionOfVpoly<VPolytope<Point>, RandomNumberGenerator>>
 {
 template <typename NT>
-static NT compute(IntersectionOfVpoly<VPolytope<Point>, RandomNumberGenerator> &P)
+static NT compute(IntersectionOfVpoly<VPolytope<Point>, RandomNumberGenerator> const& P)
 {
     NT diameter = NT(2) * NT(P.dimension()) * P.InnerBall().second;
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -578,10 +612,10 @@ template <typename Polytope, typename Point>
 struct compute_diameter<BallIntersectPolytope<Polytope, Ball<Point>>>
 {
 template <typename NT>
-static NT compute(BallIntersectPolytope<Polytope, Ball<Point>> &P)
+static NT compute(BallIntersectPolytope<Polytope, Ball<Point>> const& P)
 {
     NT diameter = NT(2) * P.radius();
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -590,7 +624,7 @@ template <typename Point>
 struct compute_diameter<ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>>
 {
 template <typename NT>
-static NT compute(ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>> &P)
+static NT compute(ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>> const& P)
 {
     typedef typename ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>::VT VT;
     typedef typename ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>::MT MT;
@@ -635,7 +669,7 @@ static NT compute(ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>> &P)
         if (iter_norm > max_norm) max_norm = iter_norm;
     }
     NT diameter = NT(2) * max_norm;
-    P.set_diameter(diameter);
+    //P.set_diameter(diameter);
     return diameter;
 }
 };
@@ -679,25 +713,25 @@ struct Walk
     typedef Ball<Point> BallType;
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
-    Walk(Polytope& P, Point & p, RandomNumberGenerator &rng)
+    Walk(Polytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         _L = compute_diameter<Polytope>::template compute<NT>(P);
         initialize(P, p, rng);
     }
 
-    Walk(BallPolytope& P, Point & p, RandomNumberGenerator &rng)
+    Walk(BallPolytope const& P, Point &p, RandomNumberGenerator &rng)
     {
         _L = compute_diameter<BallPolytope>::template compute<NT>(P);
         initialize(P, p, rng);
     }
 
-    Walk(ZonoHPoly& P, Point & p, RandomNumberGenerator &rng)
+    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &rng)
     {
         _L = compute_diameter<ZonoHPoly>::template compute<NT>(P);
         initialize(P, p, rng);
     }
 
-    Walk(Polytope& P, Point & p, RandomNumberGenerator &rng, parameters &params)
+    Walk(Polytope const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
     {
         if(params.set_L)
         {
@@ -710,7 +744,7 @@ struct Walk
         initialize(P, p, rng);
     }
 
-    Walk(BallPolytope& P, Point & p, RandomNumberGenerator &rng, parameters &params)
+    Walk(BallPolytope const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
     {
         if(params.set_L)
         {
@@ -723,7 +757,7 @@ struct Walk
         initialize(P, p, rng);
     }
 
-    Walk(ZonoHPoly& P, Point & p, RandomNumberGenerator &rng, parameters &params)
+    Walk(ZonoHPoly const& P, Point & p, RandomNumberGenerator &rng, parameters const& params)
     {
         if(params.set_L)
         {
@@ -792,7 +826,7 @@ private :
     <
         typename GenericPolytope
     >
-    inline void initialize(GenericPolytope& P,
+    inline void initialize(GenericPolytope const& P,
                            Point &p,
                            RandomNumberGenerator &rng)
     {

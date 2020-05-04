@@ -18,34 +18,34 @@
 #include "new_gaussian_volume.hpp"
 #include "sample_only.h"
 
-template <typename WalkPolocy, typename RNGType, typename Polytope, typename PointList>
+template <typename RNGType, typename Polytope, typename PointList, typename NT, typename Point>
 void sample_from_polytope(Polytope &P, PointList &randPoints, unsigned int const& walkL, unsigned int const& numpoints,
-        bool const& gaussian, NT const& a, NT const& L, Point const& StartingPoint, unsigned int const& nburns,
+        bool const& gaussian, NT const& a, NT const& L, bool const& boundary, Point const& StartingPoint, unsigned int const& nburns,
         bool const& set_L, bool const& cdhr, bool const& rdhr, bool const& billiard, bool const& ball_walk)
 {
     if (boundary) {
         if (cdhr) {
-            sampling_only <BCDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
-                    boundary, StartingPoint, nburns);
+            sampling_only_boundary <BCDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
+                     StartingPoint, nburns);
         } else {
-            sampling_only <BRDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
-                    boundary, StartingPoint, nburns);
+            sampling_only_boundary <BRDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
+                     StartingPoint, nburns);
         }
     } else if (cdhr) {
         if (gaussian) {
-            sampling_only<CDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
+            sampling_only_gaussian<GaussianCDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
                                              a, StartingPoint, nburns);
         } else {
             sampling_only<CDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
-                                             boundary, StartingPoint, nburns);
+                                             StartingPoint, nburns);
         }
     } else if(rdhr){
         if (gaussian) {
-            sampling_only<RDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
+            sampling_only_gaussian<GaussianRDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
                                              a, StartingPoint, nburns);
         } else {
             sampling_only<RDHRWalk, RNGType>(randPoints, P, walkL, numpoints,
-                                             boundary, StartingPoint, nburns);
+                                             StartingPoint, nburns);
         }
     } else if (billiard) {
         if (set_L) {
@@ -53,25 +53,27 @@ void sample_from_polytope(Polytope &P, PointList &randPoints, unsigned int const
             sampling_only<RNGType>(randPoints, P, WalkType, walkL, numpoints, StartingPoint, nburns);
         } else {
             sampling_only<BilliardWalk, RNGType>(randPoints, P, walkL, numpoints,
-                    boundary, StartingPoint, nburns);
+                     StartingPoint, nburns);
         }
     } else {
         if (set_L) {
-            BallWalk WalkType(L);
+            
             if (gaussian) {
-                sampling_only<RNGType>(randPoints, P, WalkType, walkL, numpoints, a,
+                GaussianBallWalk WalkType(L);
+                sampling_only_gaussian<RNGType>(randPoints, P, WalkType, walkL, numpoints, a,
                                        StartingPoint, nburns);
             } else {
+                BallWalk WalkType(L);
                 sampling_only<RNGType>(randPoints, P, WalkType, walkL, numpoints,
                                        StartingPoint, nburns);
             }
         } else {
             if (gaussian) {
-                sampling_only<BallWalk, RNGType>(randPoints, P, walkL, numpoints,
+                sampling_only_gaussian<GaussianBallWalk, RNGType>(randPoints, P, walkL, numpoints,
                                                  a, StartingPoint, nburns);
             } else {
                 sampling_only<BallWalk, RNGType>(randPoints, P, walkL, numpoints,
-                                                 boundary, StartingPoint, nburns);
+                                                 StartingPoint, nburns);
             }
         }
     }
@@ -345,22 +347,22 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::Reference> P = R_NilValue
 
     switch (type) {
         case 1: {
-            sample_from_polytope(HP, randPoints, walkL, numpoints, gaussian, a, L, StartingPoint, nburns,
+            sample_from_polytope<RNGType>(HP, randPoints, walkL, numpoints, gaussian, a, L, boundary, StartingPoint, nburns,
                    set_L, cdhr, rdhr, billiard, ball_walk);
             break;
         }
         case 2: {
-            sample_from_polytope(VP, randPoints, walkL, numpoints, gaussian, a, L, StartingPoint, nburns,
+            sample_from_polytope<RNGType>(VP, randPoints, walkL, numpoints, gaussian, a, L, boundary, StartingPoint, nburns,
                                  set_L, cdhr, rdhr, billiard, ball_walk);
             break;
         }
         case 3: {
-            sample_from_polytope(ZP, randPoints, walkL, numpoints, gaussian, a, L, StartingPoint, nburns,
+            sample_from_polytope<RNGType>(ZP, randPoints, walkL, numpoints, gaussian, a, L, boundary, StartingPoint, nburns,
                                  set_L, cdhr, rdhr, billiard, ball_walk);
             break;
         }
         case 4: {
-            sample_from_polytope(VPcVP, randPoints, walkL, numpoints, gaussian, a, L, StartingPoint, nburns,
+            sample_from_polytope<RNGType>(VPcVP, randPoints, walkL, numpoints, gaussian, a, L, boundary, StartingPoint, nburns,
                                  set_L, cdhr, rdhr, billiard, ball_walk);
             break;
         }

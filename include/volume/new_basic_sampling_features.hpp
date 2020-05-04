@@ -206,7 +206,7 @@ struct RandomPointGenerator
                       RandomNumberGenerator &rng,
                       Parameters const& parameters)
     {
-        Walk walk(P, p, rng,  parameters);
+        Walk walk(P, p, rng, parameters);
         for (unsigned int i=0; i<rnum; ++i)
         {
             walk.template apply(P, p, walk_length, rng);

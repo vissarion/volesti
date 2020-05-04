@@ -129,6 +129,25 @@ NT chord_random_point_generator_exp_coord(const NT &l,
 struct GaussianBallWalk
 {
 
+    GaussianBallWalk(double L)
+            :   param(L, true)
+    {}
+
+    GaussianBallWalk()
+            :   param(0, false)
+    {}
+
+    struct parameters
+    {
+        parameters(double L, bool set)
+                :   m_L(L), set_delta(set)
+        {}
+        double m_L;
+        bool set_delta;
+    };
+
+    parameters param;
+
 template
 <
     typename Polytope,
@@ -139,9 +158,17 @@ struct Walk
     typedef typename Polytope::PointType Point;
     typedef typename Point::FT NT;
 
-    Walk (Polytope const& P, Point&, NT const&, RandomNumberGenerator&)
+    Walk (Polytope const& P, Point &p, NT const& a, RandomNumberGenerator &rng)
     {
         _delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
+    }
+
+    Walk (Polytope const& P, Point &p, NT const& a, RandomNumberGenerator &rng, parameters const& params) {
+        if (params.set_delta) {
+            _delta = params.m_L;
+        } else {
+            _delta = ((P.InnerBall()).second * NT(4)) / NT(P.dimension());
+        }
     }
 
     template<typename BallPolytope>
@@ -184,6 +211,9 @@ private :
 struct GaussianRDHRWalk
 {
 
+    struct parameters {};
+    parameters param;
+
 template
 <
     typename Polytope,
@@ -195,6 +225,9 @@ struct Walk
     typedef typename Point::FT NT;
 
     Walk(Polytope const&, Point &, NT const&, RandomNumberGenerator &)
+    {}
+
+    Walk(Polytope const&, Point &, NT const&, RandomNumberGenerator &, parameters &)
     {}
 
     template
@@ -228,6 +261,9 @@ struct Walk
 struct GaussianCDHRWalk
 {
 
+    struct parameters {};
+    parameters param;
+
 template
 <
     typename Polytope,
@@ -241,6 +277,11 @@ struct Walk
     typedef BallIntersectPolytope<Polytope,BallType> BallPolytope;
 
     Walk(Polytope const& P, Point & p, NT const& a_i, RandomNumberGenerator &rng)
+    {
+        initialize(P, p, a_i, rng);
+    }
+
+    Walk(Polytope const& P, Point & p, NT const& a_i, RandomNumberGenerator &rng, parameters &)
     {
         initialize(P, p, a_i, rng);
     }
@@ -384,9 +425,41 @@ struct GaussianRandomPointGenerator
                       RandomNumberGenerator &rng)
     {
         Walk walk(P, p, a_i, rng);
-        update_delta<Walk>
-                ::apply(walk, 4.0 * P.InnerBall().second
-                        / std::sqrt(std::max(NT(1.0), a_i) * NT(P.dimension())));
+        //update_delta<Walk>
+        //        ::apply(walk, 4.0 * P.InnerBall().second
+        //                / std::sqrt(std::max(NT(1.0), a_i) * NT(P.dimension())));
+
+        for (unsigned int i=0; i<rnum; ++i)
+        {
+            walk.template apply(P, p, a_i, walk_length, rng);
+            policy.apply(randPoints, p);
+        }
+    }
+
+    template
+            <
+                    typename Polytope,
+                    typename Point,
+                    typename NT,
+                    typename PointList,
+                    typename WalkPolicy,
+                    typename RandomNumberGenerator,
+                    typename Parameters
+            >
+    static void apply(Polytope const& P,
+                      Point &p,   // a point to start
+                      NT const& a_i,
+                      unsigned int const& rnum,
+                      unsigned int const& walk_length,
+                      PointList &randPoints,
+                      WalkPolicy &policy,
+                      RandomNumberGenerator &rng,
+                      Parameters const& parameters)
+    {
+        Walk walk(P, p, a_i, rng, parameters);
+        //update_delta<Walk>
+        //::apply(walk, 4.0 * P.InnerBall().second
+          //            / std::sqrt(std::max(NT(1.0), a_i) * NT(P.dimension())));
 
         for (unsigned int i=0; i<rnum; ++i)
         {

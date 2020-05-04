@@ -256,7 +256,7 @@ double volume_cooling_hpoly (Zonotope const& Pin,
 
     auto P(Pin);
     RandomNumberGenerator rng(P.dimension());
-    RandomNumberGenerator rng_diam(P.num_of_generators());
+    //RandomNumberGenerator rng_diam(P.num_of_generators());
     cooling_ball_parameters<NT> parameters(win_len);
 
     int n = P.dimension();

@@ -368,7 +368,6 @@ bool get_sequence_of_polytopeballs(Polytope& P,
 template <typename NT>
 bool is_max_error(NT const& a, NT const& b, NT const& error)
 {
-    std::cout<<"(b-a)/a = "<<(b-a)/a<<", error = "<<error<<std::endl;
     return ((b-a)/a<error/2.0) ? true : false;
 }
 
@@ -452,7 +451,7 @@ template
                 typename NT,
                 typename RNG
         >
-NT estimate_ratio(PolyBall1& Pb1,
+NT estimate_ratio(PolyBall1 const& Pb1,
                   PolyBall2 const& Pb2,
                   NT const& ratio,
                   NT const& error,
@@ -627,7 +626,7 @@ template
                 typename NT,
                 typename RNG
         >
-NT estimate_ratio_interval(PolyBall1& Pb1,
+NT estimate_ratio_interval(PolyBall1 const& Pb1,
                            PolyBall2 const& Pb2,
                            NT const& ratio,
                            NT const& error,
