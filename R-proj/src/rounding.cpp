@@ -35,7 +35,7 @@ Rcpp::List rounding (Rcpp::Reference P){
     typedef typename Kernel::Point    Point;
     typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
     typedef HPolytope<Point> Hpolytope;
-    typedef VPolytope<Point, RNGType > Vpolytope;
+    typedef VPolytope<Point> Vpolytope;
     typedef Zonotope<Point> zonotope;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;

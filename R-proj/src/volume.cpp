@@ -19,20 +19,18 @@
 #include "new_cooling_hpoly.hpp"
 
 
-template <class Polytope>
-double generic_volume(Polytope& P, unsigned int walk_length, double e,
+template <typename RNGType, typename Polytope, typename NT>
+double generic_volume(Polytope& P, unsigned int walk_length, NT e,
                       bool CG, bool CB, bool hpoly, unsigned int win_len,
                       bool rounding, bool cdhr, bool rdhr, bool ball_walk,
                       bool billiard, int type)
 {
     typedef typename Polytope::MT MT;
     typedef typename Polytope::NT VT;
-    typedef typename Polytope::NT NT;
     typedef typename Polytope::PointType Point;
 
     NT round_val = 1.0;
     unsigned int n = P.dimension();
-    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
 
     if (rounding) {
         RNGType rng(n);
@@ -134,11 +132,11 @@ double volume (Rcpp::Reference P,
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
     typedef typename Kernel::Point    Point;
-    typedef boost::mt19937 RNGType;
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT, 5> RNGType;
     typedef HPolytope <Point> Hpolytope;
-    typedef VPolytope <Point, RNGType> Vpolytope;
+    typedef VPolytope<Point> Vpolytope;
     typedef Zonotope <Point> zonotope;
-    typedef IntersectionOfVpoly<Vpolytope> InterVP;
+    typedef IntersectionOfVpoly< Vpolytope, RNGType > InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
     unsigned int n = P.field("dimension"), walkL, type = P.field("type");
@@ -249,21 +247,21 @@ double volume (Rcpp::Reference P,
             // Hpolytope
             Hpolytope HP;
             HP.init(n, Rcpp::as<MT>(P.field("A")), Rcpp::as<VT>(P.field("b")));
-            return generic_volume<Point, NT>(HP, walkL, e, CG, CB, hpoly, win_len, round,
+            return generic_volume<RNGType>(HP, walkL, e, CG, CB, hpoly, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 2: {
             // Vpolytope
             Vpolytope VP;
             VP.init(n, Rcpp::as<MT>(P.field("V")), VT::Ones(Rcpp::as<MT>(P.field("V")).rows()));
-            return generic_volume<Point, NT>(VP, walkL, e, CG, CB, hpoly, win_len, round,
+            return generic_volume<RNGType>(VP, walkL, e, CG, CB, hpoly, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 3: {
             // Zonotope
             zonotope ZP;
             ZP.init(n, Rcpp::as<MT>(P.field("G")), VT::Ones(Rcpp::as<MT>(P.field("G")).rows()));
-            return generic_volume<Point, NT>(ZP, walkL, e, CG, CB, hpoly, win_len, round,
+            return generic_volume<RNGType>(ZP, walkL, e, CG, CB, hpoly, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 4: {
@@ -275,7 +273,7 @@ double volume (Rcpp::Reference P,
             VP2.init(n, Rcpp::as<MT>(P.field("V2")), VT::Ones(Rcpp::as<MT>(P.field("V2")).rows()));
             VPcVP.init(VP1, VP2);
             if (!VPcVP.is_feasible()) throw Rcpp::exception("Empty set!");
-            return generic_volume<Point, NT>(VPcVP, walkL, e, CG, CB, hpoly, win_len, round,
+            return generic_volume<RNGType>(VPcVP, walkL, e, CG, CB, hpoly, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
     }

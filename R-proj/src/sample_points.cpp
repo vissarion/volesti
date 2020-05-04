@@ -128,9 +128,9 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::Reference> P = R_NilValue
     typedef typename Kernel::Point    Point;
     typedef BoostRandomNumberGenerator<boost::mt19937, NT, 5> RNGType;
     typedef HPolytope <Point> Hpolytope;
-    typedef VPolytope <Point, RNGType> Vpolytope;
+    typedef VPolytope<Point> Vpolytope;
     typedef Zonotope <Point> zonotope;
-    typedef IntersectionOfVpoly<Vpolytope> InterVP;
+    typedef IntersectionOfVpoly< Vpolytope, RNGType > InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
 
