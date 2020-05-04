@@ -15,13 +15,8 @@
 #include <boost/random/uniform_int.hpp>
 #include <boost/random/normal_distribution.hpp>
 #include <boost/random/uniform_real_distribution.hpp>
-#include "vars.h"
-#include "hpolytope.h"
-#include "vpolytope.h"
-#include "zpolytope.h"
-#include "samplers.h"
-#include "rounding.h"
-#include "vpolyintersectvpoly.h"
+#include "new_volume.hpp"
+#include "new_gaussian_volume.hpp"
 #include "extractMatPoly.h"
 
 //' Internal rcpp function for the rounding of a convex polytope
@@ -38,20 +33,18 @@ Rcpp::List rounding (Rcpp::Reference P){
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
     typedef typename Kernel::Point    Point;
-    typedef boost::mt19937    RNGType;
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
     typedef HPolytope<Point> Hpolytope;
     typedef VPolytope<Point, RNGType > Vpolytope;
     typedef Zonotope<Point> zonotope;
-    typedef IntersectionOfVpoly<Vpolytope> InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
 
     Hpolytope HP;
     Vpolytope VP;
     zonotope ZP;
-    InterVP VPcVP;
 
-    bool cdhr=false, rdhr = false, ball_walk = false, billiard = false;
+    bool cdhr = false;
     unsigned int n = P.field("dimension"), walkL, type = P.field("type");;
 
     std::pair <Point, NT> InnerBall;
@@ -61,8 +54,7 @@ Rcpp::List rounding (Rcpp::Reference P){
         walkL = 10 + 10*n;
         cdhr = true;
     } else {
-        walkL = 5;
-        billiard = true;
+        walkL = 2;
     }
 
     switch (type) {
@@ -70,7 +62,6 @@ Rcpp::List rounding (Rcpp::Reference P){
             // Hpolytope
             HP.init(n, Rcpp::as<MT>(P.field("A")), Rcpp::as<VT>(P.field("b")));
             InnerBall = HP.ComputeInnerBall();
-            //if (billiard && diam < 0.0) HP.comp_diam(diam, InnerBall.second);
             break;
         }
         case 2: {
@@ -90,22 +81,39 @@ Rcpp::List rounding (Rcpp::Reference P){
     }
 
     std::pair< std::pair<MT, VT>, NT > round_res;
+    RNGType rng(n);
 
     switch (type) {
         case 1: {
-            round_polytope(Polytope &P, std::pair<Point,NT> &InnerBall,
-            const unsigned int &walk_length, RNG &rng)
-            round_res = rounding_min_ellipsoid<MT, VT>(HP, InnerBall, var);
+            if (cdhr) {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(HP, InnerBall, walkL,
+                                                                                                  rng);
+            } else {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(HP, InnerBall, walkL,
+                                                                                                  rng);
+            }
             Mat = extractMatPoly(HP);
             break;
         }
         case 2: {
-            round_res = rounding_min_ellipsoid<MT, VT>(VP, InnerBall, var);
+            if (cdhr) {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(VP, InnerBall, walkL,
+                                                                                                  rng);
+            } else {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(VP, InnerBall, walkL,
+                                                                                                      rng);
+            }
             Mat = extractMatPoly(VP);
             break;
         }
         case 3: {
-            round_res = rounding_min_ellipsoid<MT, VT>(ZP, InnerBall, var);
+            if (cdhr) {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(ZP, InnerBall, walkL,
+                                                                                                  rng);
+            } else {
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(ZP, InnerBall, walkL,
+                                                                                                      rng);
+            }
             Mat = extractMatPoly(ZP);
             break;
         }

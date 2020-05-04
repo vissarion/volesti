@@ -126,7 +126,7 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::Reference> P = R_NilValue
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
     typedef typename Kernel::Point    Point;
-    typedef boost::mt19937 RNGType;
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT, 5> RNGType;
     typedef HPolytope <Point> Hpolytope;
     typedef VPolytope <Point, RNGType> Vpolytope;
     typedef Zonotope <Point> zonotope;
@@ -343,7 +343,6 @@ Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::Reference> P = R_NilValue
         }
     }
 
-    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
     switch (type) {
         case 1: {
             sample_from_polytope(HP, randPoints, walkL, numpoints, gaussian, a, L, StartingPoint, nburns,
