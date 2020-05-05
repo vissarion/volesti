@@ -21,6 +21,7 @@
 //' @param Z A zonotope.
 //' @param fit_ratio Optional. A boolean parameter to request the computation of the ratio of fitness.
 //' @param settings Optional. A list that declares the values of the parameters of CB algorithm.
+//' @param seed Optional. A fixed seed for the number generator.
 //'
 //' @section warning:
 //' Do not use this function.
@@ -29,16 +30,21 @@
 // [[Rcpp::export]]
 Rcpp::List zono_approx (Rcpp::Reference Z,
                         Rcpp::Nullable<bool> fit_ratio = R_NilValue,
-                        Rcpp::Nullable<Rcpp::List> settings = R_NilValue) {
+                        Rcpp::Nullable<Rcpp::List> settings = R_NilValue,
+                        Rcpp::Nullable<double> seed = R_NilValue) {
 
     typedef double NT;
     typedef Cartesian <NT> Kernel;
-    typedef typename Kernel::Point Point;
     typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
+    typedef typename Kernel::Point Point;
     typedef HPolytope <Point> Hpolytope;
     typedef Zonotope <Point> zonotope;
     typedef Eigen::Matrix<NT, Eigen::Dynamic, 1> VT;
     typedef Eigen::Matrix <NT, Eigen::Dynamic, Eigen::Dynamic> MT;
+
+    //unsigned seed2 = (!seed.isNotNull()) ? std::chrono::system_clock::now().time_since_epoch().count() : Rcpp::as<double>(seed);
+    //std::cout<<"seed = "<<seed2<<std::endl;
+    //typedef BoostRandomNumberGenerator<boost::mt19937, NT, seed2> RNGType;
 
     int n = Rcpp::as<int>(Z.field("dimension")), k = Rcpp::as<MT>(Z.field("G")).rows(), win_len = 200, walkL = 1;
     NT e = 0.1, ratio = std::numeric_limits<double>::signaling_NaN();;

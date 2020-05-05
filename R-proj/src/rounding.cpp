@@ -22,13 +22,14 @@
 //' Internal rcpp function for the rounding of a convex polytope
 //'
 //' @param P A convex polytope (H- or V-representation or zonotope).
+//' @param seed Optional. A fixed seed for the number generator.
 //'
 //' @section warning:
 //' Do not use this function.
 //'
 //' @return A numerical matrix that describes the rounded polytope and contains the round value.
 // [[Rcpp::export]]
-Rcpp::List rounding (Rcpp::Reference P){
+Rcpp::List rounding (Rcpp::Reference P, Rcpp::Nullable<double> seed = R_NilValue){
 
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
@@ -40,12 +41,19 @@ Rcpp::List rounding (Rcpp::Reference P){
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
 
+    bool cdhr = false;
+    unsigned int n = P.field("dimension"), walkL, type = P.field("type");
+
+    RNGType rng(n);
+    if (seed.isNotNull()) {
+        unsigned seed2 = std::chrono::system_clock::now().time_since_epoch().count();
+        std::cout<<"seed = "<<seed2<<std::endl;
+        rng.set_seed(seed2);
+    }
+
     Hpolytope HP;
     Vpolytope VP;
     zonotope ZP;
-
-    bool cdhr = false;
-    unsigned int n = P.field("dimension"), walkL, type = P.field("type");;
 
     std::pair <Point, NT> InnerBall;
     Rcpp::NumericMatrix Mat;
@@ -81,15 +89,13 @@ Rcpp::List rounding (Rcpp::Reference P){
     }
 
     std::pair< std::pair<MT, VT>, NT > round_res;
-    RNGType rng(n);
-
     switch (type) {
         case 1: {
             if (cdhr) {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(HP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, MT, VT>(HP, InnerBall, walkL,
                                                                                                   rng);
             } else {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(HP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, MT, VT>(HP, InnerBall, walkL,
                                                                                                   rng);
             }
             Mat = extractMatPoly(HP);
@@ -97,10 +103,10 @@ Rcpp::List rounding (Rcpp::Reference P){
         }
         case 2: {
             if (cdhr) {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(VP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, MT, VT>(VP, InnerBall, walkL,
                                                                                                   rng);
             } else {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(VP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, MT, VT>(VP, InnerBall, walkL,
                                                                                                       rng);
             }
             Mat = extractMatPoly(VP);
@@ -108,10 +114,10 @@ Rcpp::List rounding (Rcpp::Reference P){
         }
         case 3: {
             if (cdhr) {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, RNGType, MT, VT>(ZP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<CDHRWalk, MT, VT>(ZP, InnerBall, walkL,
                                                                                                   rng);
             } else {
-                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, RNGType, MT, VT>(ZP, InnerBall, walkL,
+                std::pair <std::pair<MT, VT>, NT> res = round_polytope<BilliardWalk, MT, VT>(ZP, InnerBall, walkL,
                                                                                                       rng);
             }
             Mat = extractMatPoly(ZP);

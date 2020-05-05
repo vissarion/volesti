@@ -46,6 +46,7 @@ copula <- function(r1 = NULL, r2 = NULL, sigma = NULL, m = NULL, n = NULL) {
 #' \item{\code{radius} }{ The radius of the \eqn{d}-dimensional hypersphere. The default value is \eqn{1}.}
 #' }
 #' @param n The number of points that the function is going to sample.
+#' @param seed Optional. A fixed seed for the number generator.
 #'
 #' @references \cite{R.Y. Rubinstein and B. Melamed,
 #' \dQuote{Modern simulation and modeling} \emph{ Wiley Series in Probability and Statistics,} 1998.}
@@ -57,8 +58,8 @@ copula <- function(r1 = NULL, r2 = NULL, sigma = NULL, m = NULL, n = NULL) {
 #' # 100 uniform points from the 2-d unit ball
 #' points = direct_sampling(n = 100, body = list("type" = "ball", "dimension" = 2))
 #' @export
-direct_sampling <- function(body = NULL, n = NULL) {
-    .Call(`_volesti_direct_sampling`, body, n)
+direct_sampling <- function(body = NULL, n = NULL, seed = NULL) {
+    .Call(`_volesti_direct_sampling`, body, n, seed)
 }
 
 #' Compute the exact volume of (a) a zonotope (b) an arbitrary simplex in V-representation or (c) if the volume is known and declared by the input object.
@@ -171,13 +172,14 @@ rotating <- function(P, T = NULL, seed = NULL) {
 #' Internal rcpp function for the rounding of a convex polytope
 #'
 #' @param P A convex polytope (H- or V-representation or zonotope).
+#' @param seed Optional. A fixed seed for the number generator.
 #'
 #' @section warning:
 #' Do not use this function.
 #'
 #' @return A numerical matrix that describes the rounded polytope and contains the round value.
-rounding <- function(P) {
-    .Call(`_volesti_rounding`, P)
+rounding <- function(P, seed = NULL) {
+    .Call(`_volesti_rounding`, P, seed)
 }
 
 #' Sample uniformly or normally distributed points from a convex Polytope (H-polytope, V-polytope or a zonotope).
@@ -201,6 +203,7 @@ rounding <- function(P) {
 #' \item{\code{variance} }{ The variance of the multidimensional spherical gaussian. The default value is 1.}
 #'  \item{\code{mode} }{ A \eqn{d}-dimensional numerical vector that declares the mode of the Gaussian distribution. The default choice is the center of the Chebychev ball.}
 #' }
+#' @param seed Optional. A fixed seed for the number generator.
 #'
 #' @return A \eqn{d\times n} matrix that contains, column-wise, the sampled points from the convex polytope P.
 #' @examples
@@ -219,8 +222,8 @@ rounding <- function(P) {
 #' points = sample_points(P, n = 5000, random_walk = list("walk" = "BRDHR"))
 #'
 #' @export
-sample_points <- function(P = NULL, n = NULL, random_walk = NULL, distribution = NULL) {
-    .Call(`_volesti_sample_points`, P, n, random_walk, distribution)
+sample_points <- function(P = NULL, n = NULL, random_walk = NULL, distribution = NULL, seed = NULL) {
+    .Call(`_volesti_sample_points`, P, n, random_walk, distribution, seed)
 }
 
 #' The main function for volume approximation of a convex Polytope (H-polytope, V-polytope or a zonotope)
@@ -238,6 +241,7 @@ sample_points <- function(P = NULL, n = NULL, random_walk = NULL, distribution =
 #' \item{\code{hpoly} }{ A boolean parameter to use H-polytopes in MMC of CB algorithm. The default value is \code{FALSE}.}
 #' }
 #' @param rounding Optional. A boolean parameter for rounding. The default value is \code{TRUE} for V-polytopes and \code{FALSE} otherwise.
+#' @param seed Optional. A fixed seed for the number generator.
 #'
 #' @references \cite{I.Z.Emiris and V. Fisikopoulos,
 #' \dQuote{Practical polytope volume approximation,} \emph{ACM Trans. Math. Soft.,} 2014.},
@@ -260,8 +264,8 @@ sample_points <- function(P = NULL, n = NULL, random_walk = NULL, distribution =
 #' Z = gen_rand_zonotope(2, 4)
 #' vol = volume(Z, settings = list("random_walk" = "RDHR", "walk_length" = 5))
 #' @export
-volume <- function(P, settings = NULL, rounding = NULL) {
-    .Call(`_volesti_volume`, P, settings, rounding)
+volume <- function(P, settings = NULL, rounding = NULL, seed = NULL) {
+    .Call(`_volesti_volume`, P, settings, rounding, seed)
 }
 
 #' An internal Rccp function for the over-approximation of a zonotope
@@ -269,12 +273,13 @@ volume <- function(P, settings = NULL, rounding = NULL) {
 #' @param Z A zonotope.
 #' @param fit_ratio Optional. A boolean parameter to request the computation of the ratio of fitness.
 #' @param settings Optional. A list that declares the values of the parameters of CB algorithm.
+#' @param seed Optional. A fixed seed for the number generator.
 #'
 #' @section warning:
 #' Do not use this function.
 #'
 #' @return A List that contains a numerical matrix that describes the PCA approximation as a H-polytope and the ratio of fitness.
-zono_approx <- function(Z, fit_ratio = NULL, settings = NULL) {
-    .Call(`_volesti_zono_approx`, Z, fit_ratio, settings)
+zono_approx <- function(Z, fit_ratio = NULL, settings = NULL, seed = NULL) {
+    .Call(`_volesti_zono_approx`, Z, fit_ratio, settings, seed)
 }
 

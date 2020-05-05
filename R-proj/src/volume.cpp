@@ -39,9 +39,9 @@ double generic_volume(Polytope& P, unsigned int walk_length, NT e,
         std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
 
         if (type == 1) {
-            round_val = round_polytope<CDHRWalk, RNGType, MT, VT>(P, InnerBall, 10 + 10 * n, rng).second;
+            round_val = round_polytope<CDHRWalk, MT, VT>(P, InnerBall, 10 + 10 * n, rng).second;
         } else {
-            round_val = round_polytope<BilliardWalk, RNGType, MT, VT>(P, InnerBall, 2, rng).second;
+            round_val = round_polytope<BilliardWalk, MT, VT>(P, InnerBall, 2, rng).second;
         }
     }
 
@@ -94,6 +94,7 @@ double generic_volume(Polytope& P, unsigned int walk_length, NT e,
 //' \item{\code{hpoly} }{ A boolean parameter to use H-polytopes in MMC of CB algorithm. The default value is \code{FALSE}.}
 //' }
 //' @param rounding Optional. A boolean parameter for rounding. The default value is \code{TRUE} for V-polytopes and \code{FALSE} otherwise.
+//' @param seed Optional. A fixed seed for the number generator.
 //'
 //' @references \cite{I.Z.Emiris and V. Fisikopoulos,
 //' \dQuote{Practical polytope volume approximation,} \emph{ACM Trans. Math. Soft.,} 2014.},
@@ -119,19 +120,25 @@ double generic_volume(Polytope& P, unsigned int walk_length, NT e,
 // [[Rcpp::export]]
 double volume (Rcpp::Reference P,
                Rcpp::Nullable<Rcpp::List> settings = R_NilValue,
-               Rcpp::Nullable<bool> rounding = R_NilValue) {
+               Rcpp::Nullable<bool> rounding = R_NilValue,
+               Rcpp::Nullable<double> seed = R_NilValue) {
 
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
     typedef typename Kernel::Point    Point;
-    typedef BoostRandomNumberGenerator<boost::mt19937, NT, 5> RNGType;
+    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
     typedef HPolytope <Point> Hpolytope;
     typedef VPolytope<Point> Vpolytope;
     typedef Zonotope <Point> zonotope;
-    typedef IntersectionOfVpoly< Vpolytope, RNGType > InterVP;
+    typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
     unsigned int n = P.field("dimension"), walkL, type = P.field("type");
+
+    //unsigned seed2 = (!seed.isNotNull()) ? std::chrono::system_clock::now().time_since_epoch().count() : Rcpp::as<double>(seed);
+    //std::cout<<"seed = "<<seed2<<std::endl;
+    //typedef BoostRandomNumberGenerator<boost::mt19937, NT, seed2> RNGType;
+    //typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
 
     bool CG = false, CB = false, cdhr = false, rdhr = false, ball_walk = false, round = false,
              hpoly = false, billiard = false;

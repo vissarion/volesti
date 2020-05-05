@@ -11,6 +11,7 @@
 #' \item{\code{win_len} }{ The length of the sliding window for CG algorithm. The default value is \eqn{500+4dimension^2}.}
 #' \item{\code{hpoly} }{ A boolean parameter to use H-polytopes in MMC of CB algorithm. The default value is \code{FALSE}.}
 #' }
+#' @param seed Optional. A fixed seed for the number generator.
 #' 
 #' @return A list that contains the approximation body in H-representation and the ratio of fitness
 #' 
@@ -20,9 +21,9 @@
 #' retList = zonotope_approximation(Z = Z, fit_ratio = TRUE)
 #' 
 #' @export
-zonotope_approximation <- function(Z, fit_ratio = NULL, settings = NULL){
+zonotope_approximation <- function(Z, fit_ratio = NULL, settings = NULL, seed = NULL){
   
-  ret_list = zono_approx(Z, fit_ratio, settings)
+  ret_list = zono_approx(Z, fit_ratio, settings, seed)
   
   Mat = ret_list$Mat
   

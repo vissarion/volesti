@@ -46,6 +46,10 @@ struct BoostRandomNumberGenerator<RNGType, NT>
         return _ndist(_rng);
     }
 
+    void set_seed(unsigned rng_seed){
+        _rng.seed(rng_seed);
+    }
+
 private :
     RNGType _rng;
     boost::random::uniform_real_distribution<NT> _urdist;
@@ -77,6 +81,10 @@ struct BoostRandomNumberGenerator<RNGType, NT, Seed>
     NT sample_ndist()
     {
         return _ndist(_rng);
+    }
+
+    void set_seed(unsigned rng_seed){
+        _rng.seed(rng_seed);
     }
 
 private :
@@ -174,6 +182,20 @@ struct GetPointInDsphere
         NT U = rng.sample_urdist();
         U = std::pow(U, NT(1)/(NT(dim)));
         p *= radius * U;
+        return p;
+    }
+};
+
+template <typename Point>
+struct GetPointOnDsphere
+{
+    template <typename NT, typename RandomNumberGenerator>
+    inline static Point apply(unsigned int const& dim,
+                              NT const& radius,
+                              RandomNumberGenerator &rng)
+    {
+        Point p = GetDirection<Point>::apply(dim, rng);
+        if (radius != 0) p *= radius;
         return p;
     }
 };

@@ -290,7 +290,7 @@ double volume_cooling_hpoly (Zonotope const& Pin,
 
     HPolytope HP2(HP);
     std::pair<Point, NT> InnerBall = HP2.ComputeInnerBall();
-    std::pair< std::pair<MT, VT>, NT > res = round_polytope<CDHRWalk, RandomNumberGenerator, MT, VT>(HP2, InnerBall,
+    std::pair< std::pair<MT, VT>, NT > res = round_polytope<CDHRWalk, MT, VT>(HP2, InnerBall,
             10 + 10 * n, rng);
     //TODO: rounding to HP2
     //NT vol = res.second * volume_cooling_balls<BilliardWalk, RandomNumberGenerator>(HP2, Her, 1);

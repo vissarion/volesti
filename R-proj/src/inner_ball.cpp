@@ -42,7 +42,7 @@ Rcpp::NumericVector inner_ball(Rcpp::Reference P) {
     typedef HPolytope<Point> Hpolytope;
     typedef VPolytope<Point> Vpolytope;
     typedef Zonotope<Point> zonotope;
-    typedef IntersectionOfVpoly< Vpolytope, RNGType > InterVP;
+    typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
     unsigned int n = P.field("dimension"), type = P.field("type");

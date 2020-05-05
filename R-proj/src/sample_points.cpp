@@ -101,6 +101,7 @@ void sample_from_polytope(Polytope &P, PointList &randPoints, unsigned int const
 //' \item{\code{variance} }{ The variance of the multidimensional spherical gaussian. The default value is 1.}
 //'  \item{\code{mode} }{ A \eqn{d}-dimensional numerical vector that declares the mode of the Gaussian distribution. The default choice is the center of the Chebychev ball.}
 //' }
+//' @param seed Optional. A fixed seed for the number generator.
 //'
 //' @return A \eqn{d\times n} matrix that contains, column-wise, the sampled points from the convex polytope P.
 //' @examples
@@ -123,18 +124,24 @@ void sample_from_polytope(Polytope &P, PointList &randPoints, unsigned int const
 Rcpp::NumericMatrix sample_points(Rcpp::Nullable<Rcpp::Reference> P = R_NilValue,
                                   Rcpp::Nullable<unsigned int> n = R_NilValue,
                                   Rcpp::Nullable<Rcpp::List> random_walk = R_NilValue,
-                                  Rcpp::Nullable<Rcpp::List> distribution = R_NilValue){
+                                  Rcpp::Nullable<Rcpp::List> distribution = R_NilValue,
+                                  Rcpp::Nullable<double> seed = R_NilValue){
 
     typedef double NT;
     typedef Cartesian<NT>    Kernel;
-    typedef typename Kernel::Point    Point;
     typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNGType;
+    typedef typename Kernel::Point    Point;
     typedef HPolytope <Point> Hpolytope;
     typedef VPolytope<Point> Vpolytope;
     typedef Zonotope <Point> zonotope;
-    typedef IntersectionOfVpoly< Vpolytope, RNGType > InterVP;
+    typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,1> VT;
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
+
+    //unsigned seed2 = (!seed.isNotNull()) ? std::chrono::system_clock::now().time_since_epoch().count() : Rcpp::as<double>(seed);
+    //std::cout<<"seed = "<<seed2<<std::endl;
+    //typedef BoostRandomNumberGenerator<boost::mt19937, NT, seed2> RNGType;
+    //typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
 
     Hpolytope HP;
     Vpolytope VP;
