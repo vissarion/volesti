@@ -889,11 +889,12 @@ private :
 
 template
 <
-    typename WalkTypePolicy = CDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
+    typename WalkTypePolicy,
+    typename RandomNumberGenerator,
     typename Polytope
 >
 double volume_sequence_of_balls(Polytope const& Pin,
+                                RandomNumberGenerator &rng,
                                 double const& error = 1.0,
                                 unsigned int const& walk_length = 1,
                                 unsigned int const& n_threads = 1)
@@ -914,7 +915,7 @@ double volume_sequence_of_balls(Polytope const& Pin,
     auto P(Pin); //copy and work with P because we are going to shift
     unsigned int n = P.dimension();
     unsigned int rnum = std::pow(error, -2) * 400 * n * std::log(n);
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
 
     //Compute the Chebychev ball (largest inscribed ball) with center and radius
     auto InnerBall = P.ComputeInnerBall();
@@ -1069,5 +1070,22 @@ double volume_sequence_of_balls(Polytope const& Pin,
     P.free_them_all();
     return vol;
 }
+
+
+template
+        <
+                typename WalkTypePolicy,
+                typename RandomNumberGenerator,
+                typename Polytope
+        >
+double volume_sequence_of_balls(Polytope const& Pin,
+                                double const& error = 1.0,
+                                unsigned int const& walk_length = 1,
+                                unsigned int const& n_threads = 1)
+{
+    RandomNumberGenerator rng(Pin.dimension());
+    return volume_sequence_of_balls<WalkTypePolicy>(Pin, rng, error, walk_length, n_threads);
+}
+
 
 #endif

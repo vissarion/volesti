@@ -19,8 +19,8 @@
 #include "new_cooling_hpoly.hpp"
 
 
-template <typename RNGType, typename Polytope, typename NT>
-double generic_volume(Polytope& P, unsigned int walk_length, NT e,
+template <typename Polytope,  typename RNGType,  typename NT>
+double generic_volume(Polytope& P, RNGType &rng, unsigned int walk_length, NT e,
                       bool CG, bool CB, unsigned int win_len,
                       bool rounding, bool cdhr, bool rdhr, bool ball_walk,
                       bool billiard, int type)
@@ -35,7 +35,6 @@ double generic_volume(Polytope& P, unsigned int walk_length, NT e,
     unsigned int n = P.dimension();
 
     if (rounding) {
-        RNGType rng(n);
         std::pair<Point, NT> InnerBall = P.ComputeInnerBall();
 
         if (type == 1) {
@@ -48,31 +47,31 @@ double generic_volume(Polytope& P, unsigned int walk_length, NT e,
     NT vol;
     if (CG) {
         if (cdhr) {
-            vol = volume_gaussian_annealing<GaussianCDHRWalk, RNGType>(P, e, walk_length);
+            vol = volume_gaussian_annealing<GaussianCDHRWalk>(P, rng, e, walk_length);
         } else if (rdhr) {
-            vol = volume_gaussian_annealing<GaussianRDHRWalk, RNGType>(P, e, walk_length);
+            vol = volume_gaussian_annealing<GaussianRDHRWalk>(P, rng, e, walk_length);
         } else {
-            vol = volume_gaussian_annealing<GaussianBallWalk, RNGType>(P, e, walk_length);
+            vol = volume_gaussian_annealing<GaussianBallWalk>(P, rng, e, walk_length);
         }
     } else if (CB) {
         if (cdhr) {
-            vol = volume_cooling_balls<CDHRWalk, RNGType>(P, e, walk_length, win_len);
+            vol = volume_cooling_balls<CDHRWalk>(P, rng, e, walk_length, win_len);
         } else if (rdhr) {
-            vol = volume_cooling_balls<RDHRWalk, RNGType>(P, e, walk_length, win_len);
+            vol = volume_cooling_balls<RDHRWalk>(P, rng, e, walk_length, win_len);
         } else if (ball_walk) {
-            vol = volume_cooling_balls<BallWalk, RNGType>(P, e, walk_length, win_len);
+            vol = volume_cooling_balls<BallWalk>(P, rng, e, walk_length, win_len);
         } else {
-            vol = volume_cooling_balls<BilliardWalk, RNGType>(P, e, walk_length, win_len);
+            vol = volume_cooling_balls<BilliardWalk>(P, rng, e, walk_length, win_len);
         }
     } else {
         if (cdhr) {
-            vol = volume_sequence_of_balls<CDHRWalk, RNGType>(P, e, walk_length);
+            vol = volume_sequence_of_balls<CDHRWalk>(P, rng, e, walk_length);
         } else if (rdhr) {
-            vol = volume_sequence_of_balls<RDHRWalk, RNGType>(P, e, walk_length);
+            vol = volume_sequence_of_balls<RDHRWalk>(P, rng, e, walk_length);
         } else if (ball_walk) {
-            vol = volume_sequence_of_balls<BallWalk, RNGType>(P, e, walk_length);
+            vol = volume_sequence_of_balls<BallWalk>(P, rng, e, walk_length);
         } else {
-            vol = volume_sequence_of_balls<BilliardWalk, RNGType>(P, e, walk_length);
+            vol = volume_sequence_of_balls<BilliardWalk>(P, rng, e, walk_length);
         }
     }
     vol *= round_val;
@@ -135,10 +134,11 @@ double volume (Rcpp::Reference P,
     typedef Eigen::Matrix<NT,Eigen::Dynamic,Eigen::Dynamic> MT;
     unsigned int n = P.field("dimension"), walkL, type = P.field("type");
 
-    //unsigned seed2 = (!seed.isNotNull()) ? std::chrono::system_clock::now().time_since_epoch().count() : Rcpp::as<double>(seed);
-    //std::cout<<"seed = "<<seed2<<std::endl;
-    //typedef BoostRandomNumberGenerator<boost::mt19937, NT, seed2> RNGType;
-    //typedef IntersectionOfVpoly<Vpolytope, RNGType> InterVP;
+    RNGType rng(n);
+    if (seed.isNotNull()) {
+        unsigned seed2 = Rcpp::as<double>(seed);
+        rng.set_seed(seed2);
+    }
 
     bool CG = false, CB = false, cdhr = false, rdhr = false, ball_walk = false, round = false,
              hpoly = false, billiard = false;
@@ -243,14 +243,14 @@ double volume (Rcpp::Reference P,
             // Hpolytope
             Hpolytope HP;
             HP.init(n, Rcpp::as<MT>(P.field("A")), Rcpp::as<VT>(P.field("b")));
-            return generic_volume<RNGType>(HP, walkL, e, CG, CB, win_len, round,
+            return generic_volume(HP, rng, walkL, e, CG, CB, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 2: {
             // Vpolytope
             Vpolytope VP;
             VP.init(n, Rcpp::as<MT>(P.field("V")), VT::Ones(Rcpp::as<MT>(P.field("V")).rows()));
-            return generic_volume<RNGType>(VP, walkL, e, CG, CB, win_len, round,
+            return generic_volume(VP, rng, walkL, e, CG, CB, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 3: {
@@ -268,16 +268,16 @@ double volume (Rcpp::Reference P,
             }
             if (hpoly) {
                 if (cdhr) {
-                    return volume_cooling_hpoly<CDHRWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
+                    return volume_cooling_hpoly<CDHRWalk, Hpolytope>(ZP, rng, e, walkL, win_len);
                 } else if (rdhr) {
-                    return volume_cooling_hpoly<RDHRWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
+                    return volume_cooling_hpoly<RDHRWalk, Hpolytope>(ZP, rng, e, walkL, win_len);
                 } else if (ball_walk) {
-                    return volume_cooling_hpoly<BallWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
+                    return volume_cooling_hpoly<BallWalk, Hpolytope>(ZP, rng, e, walkL, win_len);
                 } else {
-                    return volume_cooling_hpoly<BilliardWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
+                    return volume_cooling_hpoly<BilliardWalk, Hpolytope>(ZP, rng, e, walkL, win_len);
                 }
             }
-            return generic_volume<RNGType>(ZP, walkL, e, CG, CB, win_len, round,
+            return generic_volume(ZP, rng, walkL, e, CG, CB, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
         case 4: {
@@ -289,7 +289,7 @@ double volume (Rcpp::Reference P,
             VP2.init(n, Rcpp::as<MT>(P.field("V2")), VT::Ones(Rcpp::as<MT>(P.field("V2")).rows()));
             VPcVP.init(VP1, VP2);
             if (!VPcVP.is_feasible()) throw Rcpp::exception("Empty set!");
-            return generic_volume<RNGType>(VPcVP, walkL, e, CG, CB, win_len, round,
+            return generic_volume(VPcVP, rng, walkL, e, CG, CB, win_len, round,
                                              cdhr, rdhr, ball_walk, billiard, type);
         }
     }

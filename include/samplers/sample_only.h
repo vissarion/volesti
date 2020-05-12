@@ -28,7 +28,7 @@ template <typename WalkTypePolicy,
         typename Polytope,
         typename Point
         >
-void sampling_only(PointList &randPoints, Polytope &P, const unsigned int &walk_len,
+void sampling_only(PointList &randPoints, Polytope &P, RandomNumberGenerator &rng, const unsigned int &walk_len,
                    const unsigned int &rnum, const Point &starting_point, unsigned int const& nburns) {
 
     typedef typename WalkTypePolicy::template Walk
@@ -37,7 +37,7 @@ void sampling_only(PointList &randPoints, Polytope &P, const unsigned int &walk_
                     RandomNumberGenerator
             > walk;
 
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     PushBackWalkPolicy push_back_policy;
 
     Point p = starting_point;
@@ -59,7 +59,7 @@ template <
         typename WalkTypePolicy,
         typename Point
 >
-void sampling_only(PointList &randPoints, Polytope &P, WalkTypePolicy &WalkType, const unsigned int &walk_len,
+void sampling_only(PointList &randPoints, Polytope &P, RandomNumberGenerator &rng, WalkTypePolicy &WalkType, const unsigned int &walk_len,
                    const unsigned int &rnum,
                    const Point &starting_point, unsigned int const& nburns)
 {
@@ -69,7 +69,7 @@ void sampling_only(PointList &randPoints, Polytope &P, WalkTypePolicy &WalkType,
                     RandomNumberGenerator
             > walk;
 
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     PushBackWalkPolicy push_back_policy;
     typedef RandomPointGenerator<walk> RandomPointGenerator;
 
@@ -90,7 +90,7 @@ template <typename WalkTypePolicy,
         typename Polytope,
         typename Point
 >
-void sampling_only_boundary(PointList &randPoints, Polytope &P, const unsigned int &walk_len,
+void sampling_only_boundary(PointList &randPoints, Polytope &P, RandomNumberGenerator &rng, const unsigned int &walk_len,
                    const unsigned int &rnum, const Point &starting_point, unsigned int const& nburns) {
     typedef typename WalkTypePolicy::template Walk
             <
@@ -98,7 +98,7 @@ void sampling_only_boundary(PointList &randPoints, Polytope &P, const unsigned i
                     RandomNumberGenerator
             > walk;
 
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     PushBackWalkPolicy push_back_policy;
 
     Point p = starting_point;
@@ -121,7 +121,7 @@ template <
         typename NT,
         typename Point
         >
-void sampling_only_gaussian(PointList &randPoints, Polytope &P, const unsigned int &walk_len,
+void sampling_only_gaussian(PointList &randPoints, Polytope &P, RandomNumberGenerator &rng, const unsigned int &walk_len,
                    const unsigned int &rnum, const NT &a,
                    const Point &starting_point, unsigned int const& nburns) {
 
@@ -131,7 +131,7 @@ void sampling_only_gaussian(PointList &randPoints, Polytope &P, const unsigned i
                     RandomNumberGenerator
             > walk;
 
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     PushBackWalkPolicy push_back_policy;
 
     Point p = starting_point;
@@ -155,7 +155,7 @@ template <
         typename NT,
         typename Point
         >
-void sampling_only_gaussian(PointList &randPoints, Polytope &P, WalkTypePolicy &WalkType, const unsigned int &walk_len,
+void sampling_only_gaussian(PointList &randPoints, Polytope &P, RandomNumberGenerator &rng, WalkTypePolicy &WalkType, const unsigned int &walk_len,
                    const unsigned int &rnum, const NT &a,
                    const Point &starting_point, unsigned int const& nburns) {
 
@@ -165,7 +165,7 @@ void sampling_only_gaussian(PointList &randPoints, Polytope &P, WalkTypePolicy &
                     RandomNumberGenerator
             > walk;
 
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     PushBackWalkPolicy push_back_policy;
 
     Point p = starting_point;

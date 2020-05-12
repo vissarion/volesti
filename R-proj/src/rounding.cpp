@@ -46,8 +46,7 @@ Rcpp::List rounding (Rcpp::Reference P, Rcpp::Nullable<double> seed = R_NilValue
 
     RNGType rng(n);
     if (seed.isNotNull()) {
-        unsigned seed2 = std::chrono::system_clock::now().time_since_epoch().count();
-        std::cout<<"seed = "<<seed2<<std::endl;
+        unsigned seed2 = Rcpp::as<double>(seed);
         rng.set_seed(seed2);
     }
 

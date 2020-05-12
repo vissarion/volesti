@@ -663,11 +663,12 @@ NT estimate_ratio_interval(PolyBall1 const& Pb1,
 
 template
 <
-    typename WalkTypePolicy = BilliardWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
+    typename WalkTypePolicy,
+    typename RandomNumberGenerator,
     typename Polytope
 >
 double volume_cooling_balls(Polytope const& Pin,
+                            RandomNumberGenerator &rng,
                             double const& error = 1.0,
                             unsigned int const& walk_length = 1,
                             unsigned int const& win_len = 250)
@@ -687,7 +688,7 @@ double volume_cooling_balls(Polytope const& Pin,
     typedef RandomPointGenerator<WalkType> RandomPointGenerator;
 
     auto P(Pin);
-    RandomNumberGenerator rng(P.dimension());
+    //RandomNumberGenerator rng(P.dimension());
     cooling_ball_parameters<NT> parameters(win_len);
 
     int n = P.dimension();
@@ -776,5 +777,22 @@ double volume_cooling_balls(Polytope const& Pin,
     P.free_them_all();
     return vol;
 }
+
+
+
+template
+        <
+                typename WalkTypePolicy,
+                typename RandomNumberGenerator,
+                typename Polytope
+        >
+double volume_cooling_balls(Polytope const& Pin,
+                            double const& error = 0.1,
+                            unsigned int const& walk_length = 1)
+{
+    RandomNumberGenerator rng(Pin.dimension());
+    return volume_cooling_balls<WalkTypePolicy>(Pin, rng, error, walk_length);
+}
+
 
 #endif

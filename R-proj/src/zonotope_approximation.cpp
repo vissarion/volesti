@@ -41,12 +41,14 @@ Rcpp::List zono_approx (Rcpp::Reference Z,
     typedef Zonotope <Point> zonotope;
     typedef Eigen::Matrix<NT, Eigen::Dynamic, 1> VT;
     typedef Eigen::Matrix <NT, Eigen::Dynamic, Eigen::Dynamic> MT;
-
-    //unsigned seed2 = (!seed.isNotNull()) ? std::chrono::system_clock::now().time_since_epoch().count() : Rcpp::as<double>(seed);
-    //std::cout<<"seed = "<<seed2<<std::endl;
-    //typedef BoostRandomNumberGenerator<boost::mt19937, NT, seed2> RNGType;
-
     int n = Rcpp::as<int>(Z.field("dimension")), k = Rcpp::as<MT>(Z.field("G")).rows(), win_len = 200, walkL = 1;
+
+    RNGType rng(n);
+    if (seed.isNotNull()) {
+        unsigned seed2 = Rcpp::as<double>(seed);
+        rng.set_seed(seed2);
+    }
+
     NT e = 0.1, ratio = std::numeric_limits<double>::signaling_NaN();;
     bool hpoly = false;
 
@@ -90,9 +92,9 @@ Rcpp::List zono_approx (Rcpp::Reference Z,
 
         NT vol;
         if (!hpoly) {
-            vol = volume_cooling_balls<BilliardWalk, RNGType>(ZP, e, walkL, win_len);
+            vol = volume_cooling_balls<BilliardWalk>(ZP, rng, e, walkL, win_len);
         } else {
-            vol = volume_cooling_hpoly<BilliardWalk, RNGType, Hpolytope>(ZP, e, walkL, win_len);
+            vol = volume_cooling_hpoly<BilliardWalk, Hpolytope>(ZP, rng, e, walkL, win_len);
         }
         ratio = std::pow(vol_red / vol, 1.0 / NT(n));
     }

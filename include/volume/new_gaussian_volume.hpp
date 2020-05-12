@@ -728,11 +728,12 @@ struct gaussian_annealing_parameters
 
 template
 <
-    typename WalkTypePolicy = GaussianCDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt19937, double>,
+    typename WalkTypePolicy,
+    typename RandomNumberGenerator,
     typename Polytope
 >
 double volume_gaussian_annealing(Polytope const& Pin,
+                                 RandomNumberGenerator &rng,
                                  double const& error = 0.1,
                                  unsigned int const& walk_length = 1)
 {
@@ -753,7 +754,7 @@ double volume_gaussian_annealing(Polytope const& Pin,
     unsigned int n = P.dimension();
     unsigned int m = P.num_of_hyperplanes();
     gaussian_annealing_parameters<NT> parameters(P.dimension());
-    RandomNumberGenerator rng(n);
+    //RandomNumberGenerator rng(n);
 
     // Consider Chebychev center as an internal point
     auto InnerBall = P.ComputeInnerBall();
@@ -893,6 +894,21 @@ double volume_gaussian_annealing(Polytope const& Pin,
 
     P.free_them_all();
     return vol;
+}
+
+
+template
+        <
+                typename WalkTypePolicy,
+                typename RandomNumberGenerator,
+                typename Polytope
+        >
+double volume_gaussian_annealing(Polytope const& Pin,
+                                 double const& error = 0.1,
+                                 unsigned int const& walk_length = 1)
+{
+    RandomNumberGenerator rng(Pin.dimension());
+    return volume_gaussian_annealing<WalkTypePolicy>(Pin, rng, error, walk_length);
 }
 
 
