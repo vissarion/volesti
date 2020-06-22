@@ -27,19 +27,19 @@
 //' @param spectrahedron A spectrahedron in n dimensions; must be an object of class Spectrahedron
 //' @param objectiveFunction A numerical vector of length n
 //' @param outputFile Name of the output file
-/*
-//' @examples
-//' \dontrun{
-//' A0 = matrix(c(-1,0,0,0,-2,1,0,1,-2), nrow=3, ncol=3, byrow = TRUE)
-//' A1 = matrix(c(-1,0,0,0,0,1,0,1,0), nrow=3, ncol=3, byrow = TRUE)
-//' A2 = matrix(c(0,0,-1,0,0,0,-1,0,0), nrow=3, ncol=3, byrow = TRUE)
-//' lmi = list(A0, A1, A2)
-//' S = Spectrahedron$new(lmi);
-//' objFunction = c(1,1)
-//' writeSdpaFormatFile(S, objFunction, "output.txt")
-*/
 //' @export
 // [[Rcpp::export]]
+
+/*
+@examples
+A0 = matrix(c(-1,0,0,0,-2,1,0,1,-2), nrow=3, ncol=3, byrow = TRUE)
+A1 = matrix(c(-1,0,0,0,0,1,0,1,0), nrow=3, ncol=3, byrow = TRUE)
+A2 = matrix(c(0,0,-1,0,0,0,-1,0,0), nrow=3, ncol=3, byrow = TRUE)
+lmi = list(A0, A1, A2)
+S = Spectrahedron$new(lmi);
+objFunction = c(1,1)
+writeSdpaFormatFile(S, objFunction, "output.txt")
+*/
 void writeSdpaFormatFile(Rcpp::Nullable<Rcpp::Reference> spectrahedron = R_NilValue,
                Rcpp::Nullable<Rcpp::NumericVector> objectiveFunction = R_NilValue,
                Rcpp::Nullable<std::string> outputFile = R_NilValue) {
