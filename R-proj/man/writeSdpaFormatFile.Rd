@@ -21,12 +21,3 @@ writeSdpaFormatFile(
 Outputs a spectrahedron (the matrices defining a linear matrix inequality) and a vector (the objective function)
 to a SDPA format file.
 }
-\examples{
-A0 = matrix(c(-1,0,0,0,-2,1,0,1,-2), nrow=3, ncol=3, byrow = TRUE)
-A1 = matrix(c(-1,0,0,0,0,1,0,1,0), nrow=3, ncol=3, byrow = TRUE)
-A2 = matrix(c(0,0,-1,0,0,0,-1,0,0), nrow=3, ncol=3, byrow = TRUE)
-lmi = list(A0, A1, A2)
-S = Spectrahedron$new(lmi);
-objFunction = c(1,1)
-writeSdpaFormatFile(S, objFunction, "output.txt")
-}
