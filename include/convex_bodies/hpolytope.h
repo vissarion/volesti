@@ -34,6 +34,7 @@ bool is_inner_point_nan_inf(VT const& p)
             return true;
         }
     }
+    return false;
 }
 
 /// This class describes a polytope in H-representation or an H-polytope
