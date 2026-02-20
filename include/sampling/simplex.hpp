@@ -36,7 +36,7 @@ void Sam_Unit(unsigned int dim,
     std::vector<unsigned int> x_vec;
     std::vector<NT> y;
 
-    boost::random::uniform_int_distribution<> uidist(1,M);
+    std::uniform_int_distribution<> uidist(1,M);
     unsigned rng_seed = std::chrono::system_clock::now().time_since_epoch().count();
     RNGType rng(rng_seed);
     if (!isnan(seed)) {
@@ -179,7 +179,7 @@ void Sam_Canon_Unit(unsigned int dim,
     unsigned int j,i,x_rand,M=2147483647,pointer;  // M is the largest possible integer
     std::vector<NT> y;
     dim--;
-    boost::random::uniform_int_distribution<> uidist(1,M);
+    std::uniform_int_distribution<> uidist(1,M);
 
     unsigned rng_seed = std::chrono::system_clock::now().time_since_epoch().count();
     RNGType rng(rng_seed);
@@ -251,7 +251,7 @@ void Sam_arb_simplex(const Vpolytope &P, unsigned int num, PointList &points){
     NT Xj;
     Point p0=*it_beg;
 
-    boost::random::uniform_int_distribution<> uidist(1,M);
+    std::uniform_int_distribution<> uidist(1,M);
     unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
     RNGType rng(seed);
 

@@ -215,6 +215,9 @@ add_test(NAME test_sparse COMMAND sampling_test -tc=sparse)
 add_executable (shake_and_bake_test shake_and_bake_test.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME test_shake_and_bake COMMAND shake_and_bake_test -tc=shake_and_bake)
 
+add_executable (sparse_billiard_test sparse_billiard_test.cpp $<TARGET_OBJECTS:test_main>)
+add_test(NAME test_sparse_billiard COMMAND sparse_billiard_test -tc=sparse_billiard_basic)
+
 add_executable (mmcs_test mmcs_test.cpp $<TARGET_OBJECTS:test_main>)
 add_test(NAME test_mmcs COMMAND mmcs_test -tc=mmcs)
 
@@ -427,4 +430,5 @@ TARGET_LINK_LIBRARIES(logconcave_sampling_test lp_solve ${IFOPT} ${IFOPT_IPOPT} 
 TARGET_LINK_LIBRARIES(crhmc_sampling_test lp_solve ${IFOPT} ${IFOPT_IPOPT} ${PTHREAD} ${GMP} ${MPSOLVE} ${FFTW3} ${MKL_LINK} QD_LIB coverage_config)
 TARGET_LINK_LIBRARIES(order_polytope lp_solve coverage_config)
 TARGET_LINK_LIBRARIES(matrix_sampling_test lp_solve ${MKL_LINK} coverage_config)
+TARGET_LINK_LIBRARIES(sparse_billiard_test lp_solve ${MKL_LINK} coverage_config)
 TARGET_LINK_LIBRARIES(test_internal_points lp_solve ${MKL_LINK} coverage_config)

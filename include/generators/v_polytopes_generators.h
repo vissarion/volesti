@@ -44,7 +44,7 @@ Polytope random_vpoly(unsigned int dim, unsigned int k, double seed = std::numer
         unsigned rng_seed = seed;
         rng.seed(rng_seed);
     }
-    boost::normal_distribution<> rdist(0,1);
+    std::normal_distribution<> rdist(0,1);
 
     typename std::vector<NT>::iterator pit;
     MT V(k, dim);
@@ -101,7 +101,7 @@ Polytope random_vpoly_incube(unsigned int d, unsigned int k, double seed = std::
         unsigned rng_seed = seed;
         rng.seed(rng_seed);
     }
-    boost::random::uniform_real_distribution<> urdist1(-1, 1);
+    std::uniform_real_distribution<> urdist1(-1, 1);
 
     Point p(d);
     typename std::vector<NT>::iterator pit;

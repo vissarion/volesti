@@ -10,14 +10,15 @@
 #define ROTATING_H
 
 #include <Eigen/Eigen>
+#include <random>
 
 template <typename MT, typename Polytope>
 MT rotating(Polytope &P){
 
-    typedef boost::mt19937    RNGType;
+    typedef std::mt19937    RNGType;
     unsigned rng_seed = std::chrono::system_clock::now().time_since_epoch().count();
     RNGType rng(rng_seed);
-    boost::random::uniform_real_distribution<> urdist(-1.0, 1.0);
+    std::uniform_real_distribution<> urdist(-1.0, 1.0);
     unsigned int n = P.dimension();
 
     // pick a random rotation
@@ -40,9 +41,9 @@ MT rotating(Polytope &P){
 template <typename MT, typename Polytope>
 MT rotating(Polytope &P, unsigned seed){
 
-    typedef boost::mt19937    RNGType;
+    typedef std::mt19937    RNGType;
     RNGType rng(seed);
-    boost::random::uniform_real_distribution<> urdist(-1.0, 1.0);
+    std::uniform_real_distribution<> urdist(-1.0, 1.0);
     unsigned int n = P.dimension();
 
     // pick a random rotation

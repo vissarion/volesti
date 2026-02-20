@@ -124,7 +124,7 @@ public:
 
             // initialize
             RandomNumberGenerator &rng = settings.randomNumberGenerator;
-            boost::random::uniform_real_distribution<> urdist(0, 1);
+            std::uniform_real_distribution<> urdist(0, 1);
             const NT dl = settings.dl;
             unsigned int n = convexbody.dimension();
             int reflectionsNum = 0;

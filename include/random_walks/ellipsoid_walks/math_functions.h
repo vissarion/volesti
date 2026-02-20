@@ -13,33 +13,29 @@
 #define PWALK_UTIL_MATH_FUNCTIONS_HPP_
 
 #include <Eigen/Dense>
-#include <boost/random.hpp>
+#include <random>
 #include <cmath>
 
 // Define random number generator type
-typedef boost::mt19937 rng_t;
+typedef std::mt19937 rng_t;
 
 template <typename Dtype>
 void sample_gaussian(const int n, const Dtype a,
                      const Dtype sigma, Eigen::Matrix<Dtype, Eigen::Dynamic, 1>& r) {
     static rng_t gen(1234567);
-    static boost::normal_distribution<Dtype> random_distribution(a, sigma);
-    static boost::variate_generator<rng_t&, boost::normal_distribution<Dtype> >
-    variate_generator(gen, random_distribution);
+    static std::normal_distribution<Dtype> random_distribution(a, sigma);
 
     for (int i = 0; i < n; ++i) {
-        r[i] = variate_generator();
+        r[i] = random_distribution(gen);
     }
 }
 
 template <typename Dtype>
 Dtype rng_uniform(const Dtype a, const Dtype b) {
     static rng_t gen(1234567);
-    static boost::uniform_real<Dtype> random_distribution(a, b);
-    static boost::variate_generator<rng_t&, boost::uniform_real<Dtype> >
-    variate_generator(gen, random_distribution);
+    static std::uniform_real_distribution<Dtype> random_distribution(a, b);
 
-    return variate_generator();
+    return random_distribution(gen);
 }
 
 template <typename Dtype>

@@ -19,10 +19,7 @@
 #include "misc/misc.h"
 #include "misc/poset.h"
 
-#include <boost/random.hpp>
-#include <boost/random/uniform_int.hpp>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
+#include <random>
 
 #include "generators/boost_random_number_generator.hpp"
 
@@ -104,7 +101,7 @@ Polytope random_orderpoly(unsigned int dim, unsigned int m, int seed = std::nume
         rng_seed = seed;
     }
 
-    typedef BoostRandomNumberGenerator<boost::mt19937, NT> RNG;
+    typedef BoostRandomNumberGenerator<std::mt19937, NT> RNG;
     RNG rng(dim);
     rng.set_seed(rng_seed);
 
@@ -113,7 +110,7 @@ Polytope random_orderpoly(unsigned int dim, unsigned int m, int seed = std::nume
     for(int i = 0; i < dim; ++i) {
         order[i] = i;
     }
-    boost::mt19937 shuffle_rng(rng_seed);
+    std::mt19937 shuffle_rng(rng_seed);
     std::shuffle(order.begin(), order.end(), shuffle_rng);
 
 

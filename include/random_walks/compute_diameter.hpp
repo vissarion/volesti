@@ -148,7 +148,7 @@ struct compute_diameter<ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>>
         typedef typename ZonoIntersectHPoly<Zonotope<Point>, HPolytope<Point>>::MT MT;
         typedef HPolytope<Point> Hpolytope;
 
-        typedef BoostRandomNumberGenerator<boost::mt19937, NT> RandomNumberGenerator;
+        typedef BoostRandomNumberGenerator<std::mt19937, NT> RandomNumberGenerator;
         PushBackWalkPolicy push_back_policy;
         typedef typename BCDHRWalk::template Walk
             <

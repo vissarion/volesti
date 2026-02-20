@@ -330,7 +330,7 @@ public:
         bool done=false;
         unsigned seed = std::chrono::system_clock::now().time_since_epoch().count();
         RNGType rng(seed);
-        boost::random::uniform_int_distribution<> uidist(1, m);
+        std::uniform_int_distribution<> uidist(1, m);
 
         std::pair<Point,NT> res;
         // while d+1 points do not define a full dimensional simplex repeat

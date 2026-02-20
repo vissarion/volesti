@@ -10,9 +10,8 @@
 
 #include <exception>
 #include <chrono>
+#include <random>
 #include <Eigen/Eigen>
-#include <boost/random/normal_distribution.hpp>
-#include <boost/random/uniform_real_distribution.hpp>
 
 #include "preprocess/inscribed_ellipsoid_rounding.hpp"
 
@@ -43,7 +42,7 @@ Polytope random_hpoly(unsigned int dim, unsigned int m, int seed = std::numeric_
     Point p(dim);
 
     for (int i = 0; i < m; ++i) {
-        boost::normal_distribution<> rdist(0, 1);
+        std::normal_distribution<> rdist(0, 1);
         NT normal = NT(0);
         NT *data = p.pointerToData();
 
@@ -68,7 +67,7 @@ Polytope random_hpoly(unsigned int dim, unsigned int m, int seed = std::numeric_
 template <class MT, class VT, class RNGType, typename NT>
 MT get_skinny_transformation(const int d, NT const eig_ratio, int const seed)
 {
-    boost::normal_distribution<> gdist(0, 1);
+    std::normal_distribution<> gdist(0, 1);
     RNGType rng(seed);
     
     MT W(d, d);
@@ -85,7 +84,7 @@ MT get_skinny_transformation(const int d, NT const eig_ratio, int const seed)
     const NT eig_min = NT(1), eig_max = eig_ratio;
     diag(0) = eig_min;
     diag(d-1) = eig_max;
-    boost::random::uniform_real_distribution<NT> udist(NT(0), NT(1));
+    std::uniform_real_distribution<NT> udist(NT(0), NT(1));
     NT rand;
     for (int i = 1; i < d-1; i++) {
         rand = udist(rng);

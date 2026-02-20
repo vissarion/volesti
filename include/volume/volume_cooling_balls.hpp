@@ -691,7 +691,7 @@ template
 <
     typename WalkTypePolicy,
     typename Polytope,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937,
                                                                 double>
 >
 std::pair<double, double> volume_cooling_balls(Polytope& Pin,
@@ -820,7 +820,7 @@ std::pair<double, double> volume_cooling_balls(Polytope& Pin,
 template
 <
     typename WalkTypePolicy = CDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937,
                                                                 double>,
     typename Polytope
 >
@@ -836,7 +836,7 @@ std::pair<double, double> volume_cooling_balls(Polytope &Pin,
 template
 <
     typename WalkTypePolicy = CDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937,
                                                                 double>,
     typename Polytope
 >

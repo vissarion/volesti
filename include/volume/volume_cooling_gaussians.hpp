@@ -458,7 +458,7 @@ double volume_cooling_gaussians(Polytope& Pin,
 template
 <
     typename WalkTypePolicy = GaussianCDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b, double>,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937, double>,
     typename Polytope
 >
 double volume_cooling_gaussians(Polytope &Pin,
@@ -473,7 +473,7 @@ double volume_cooling_gaussians(Polytope &Pin,
 template
 <
     typename WalkTypePolicy = GaussianCDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b, double>,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937, double>,
     typename Polytope
 >
 double volume_cooling_gaussians(Polytope &Pin,

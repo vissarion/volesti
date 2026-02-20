@@ -230,7 +230,7 @@ double volume_sequence_of_balls(Polytope& Pin,
 template
 <
     typename WalkTypePolicy = CDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b, double>,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937, double>,
     typename Polytope
 >
 double volume_sequence_of_balls(Polytope &Pin,
@@ -247,7 +247,7 @@ double volume_sequence_of_balls(Polytope &Pin,
 template
 <
     typename WalkTypePolicy = CDHRWalk,
-    typename RandomNumberGenerator = BoostRandomNumberGenerator<boost::mt11213b, double>,
+    typename RandomNumberGenerator = BoostRandomNumberGenerator<std::mt19937, double>,
     typename Polytope
 >
 double volume_sequence_of_balls(Polytope &Pin,

@@ -149,7 +149,7 @@ void mmcs(Polytope const& Pin,
           int& total_neff,
           unsigned int const& walk_length)
 {
-    using RNGType = BoostRandomNumberGenerator<boost::mt19937, typename Polytope::NT>;
+    using RNGType = BoostRandomNumberGenerator<std::mt19937, typename Polytope::NT>;
     RNGType rng(Pin.dimension());
     mmcs(Pin, Neff, S, total_neff, walk_length, rng);
 }

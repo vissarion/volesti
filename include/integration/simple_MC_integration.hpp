@@ -32,7 +32,7 @@ typedef double NT;
 typedef Cartesian<NT> Kernel;
 typedef typename Kernel::Point Point;
 typedef HPolytope<Point> Hpolytope;
-typedef boost::mt19937 RNGType;
+typedef std::mt19937 RNGType;
 typedef BoostRandomNumberGenerator<RNGType, NT> RandomNumberGenerator;
 typedef typename HPolytope<Point>::MT MT;
 typedef typename HPolytope<Point>::VT VT;
