@@ -14,9 +14,9 @@
 
 #include <memory>
 
-#include "Spectra/SymEigsSolver.h"
-#include "Spectra/MatOp/DenseSymMatProd.h"
-#include "Spectra/MatOp/SparseSymMatProd.h"
+#include <Spectra/SymEigsSolver.h>
+#include <Spectra/MatOp/DenseSymMatProd.h>
+#include <Spectra/MatOp/SparseSymMatProd.h>
 
 
 template <typename NT>

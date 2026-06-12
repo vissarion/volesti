@@ -67,6 +67,8 @@ GetBoost()
 include("../../external/cmake-files/LPSolve.cmake")
 GetLPSolve()
 
+include("../../external/cmake-files/Spectra.cmake")
+GetSpectra()
 if (BUILTIN_EIGEN)
     include_directories (BEFORE ../../external/_deps/Eigen)
 else ()
