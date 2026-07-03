@@ -1,8 +1,10 @@
 ## Dependencies
 
-R packages: `nloptr`, `MASS`, `Matrix`, `pracma`, `ggm`, `BiocManager`, `graph`.  
+R packages: `nloptr`, `MASS`, `Matrix`, `pracma`, `ggm`, `BiocManager`, `graph`, `Rcpp`, `RcppEigen`, `BH`.  
 
 To install `graph` use `BiocManager::install("graph")`.  
+
+For `nloptr` you need `sudo apt install libnlopt-dev`.
 
 ## Installation
 
