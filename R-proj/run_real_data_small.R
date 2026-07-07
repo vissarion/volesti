@@ -1,7 +1,7 @@
 library(volesti)
 
 #dm_covariance_matrices_70d <- readRDS("~/volume_approximation/R-proj/dm_covariance_matrices_70d.rds")
-usa_covariance_matrices_small <- readRDS("~/volume_approximation/R-proj/usa_covariance_matrices_small.rds")
+usa_covariance_matrices_small <- readRDS("msci_covariance_matrices_small.rds")
 N = length(usa_covariance_matrices_small$lCov)
 
 all_samples_smallest_1_81 = matrix(list(), 0, 1)
@@ -51,8 +51,8 @@ for (index in seq(from=start_index, to=end_index, by=5)) {
       }
     }
     all_samples_smallest_1_81[[length(all_samples_smallest_1_81) + 1]] = vol_level_samples
-    saveRDS(all_samples_smallest_1_81, file = paste0("all_samples_usa_smallest_",as.character(index),"_",as.character(index+9),".rds"))
-    saveRDS(something_went_wong_smallest, file = paste0("something_went_wong_usa_smallest_",as.character(index),"_",as.character(index+9),".rds"))
+    saveRDS(all_samples_smallest_1_81, file = paste0("all_samples_msci_smallest_",as.character(index),"_",as.character(index+9),".rds"))
+    saveRDS(something_went_wong_smallest, file = paste0("something_went_wrong_msci_smallest_",as.character(index),"_",as.character(index+9),".rds"))
   }
   
 }

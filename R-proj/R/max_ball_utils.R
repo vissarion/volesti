@@ -182,13 +182,13 @@ get_center_max_ball <- function(A, b, x0, V, Sind) {
   
   q = A%*%xc-b
   if(sum(q>0) > 0){
-    stop("[max_ball] center outside simplex")
+    warning("[max_ball] center outside simplex, using fallback"); xc = compute_interior_point_single_component(A, b, x0); return(xc)
   }
   #print(xc)
   #print(y[d+1])
   #print(sqrt(sum((xc-x0)^2))+y[d+1]-1)
   if (sqrt(sum((xc-x0)^2))+y[d+1]-1 > 1e-03) {
-    stop("[max_ball] too big interior ball")
+    warning("[max_ball] too big interior ball, using fallback interior point"); xc = compute_interior_point_single_component(A, b, x0); return(xc)
   }
   
   return(xc)
